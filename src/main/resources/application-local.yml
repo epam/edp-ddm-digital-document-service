@@ -1,0 +1,21 @@
+platform:
+  security:
+    enabled: false
+
+ceph:
+  http-endpoint: localhost:1000
+  access-key: access-key
+  secret-key: secret-key
+  bucket: bucket-name
+
+s3:
+  config:
+    client:
+      protocol: http
+    options:
+      pathStyleAccess: true
+
+bpms:
+  url: http://localhost:8100
+form-management-provider:
+  url: http://localhost:8082

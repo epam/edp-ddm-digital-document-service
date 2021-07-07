@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.epam.digital.data.platform</groupId>
+    <artifactId>low-code-platform-parent</artifactId>
+    <version>1.6.0.1</version>
+    <relativePath/>
+  </parent>
+
+  <artifactId>digital-document-service</artifactId>
+  <version>1.7.0</version>
+  <name>digital-document-service</name>
+  <description>Digital document service</description>
+
+  <properties>
+    <ddm-starter-security.version>1.6.0.1</ddm-starter-security.version>
+    <ddm-starter-actuator.version>1.6.0.1</ddm-starter-actuator.version>
+    <ddm-starter-logger.version>1.6.0.1</ddm-starter-logger.version>
+	  <log4j.version>2.17.0</log4j.version>
+    <ddm-starter-error-handler.version>1.6.0.1</ddm-starter-error-handler.version>
+    <ddm-starter-validation.version>1.6.0.1</ddm-starter-validation.version>
+    <bpms-client.version>1.6.0.1</bpms-client.version>
+    <ddm-file-storage.version>1.7.0.1</ddm-file-storage.version>
+
+    <apache.commons.io.version>2.6</apache.commons.io.version>
+
+    <sonar.coverage.exclusions>
+      **/com/epam/digital/data/platform/dgtldcmnt/dto/**,
+      **/DigitalDocumentServiceApplication.java,
+      **/docs/**/*
+    </sonar.coverage.exclusions>
+
+    <!-- This property is set by jacoco and used in the surefire config
+			Set it to empty to avoid JVM startup error related to "@{argLine}" when run without jacoco -->
+    <argLine/>
+  </properties>
+  
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+	      <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-api</artifactId>
+        <version>${log4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-core</artifactId>
+        <version>${log4j.version}</version>
+	    </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.epam.digital.data.platform</groupId>
+      <artifactId>ddm-starter-security</artifactId>
+      <version>${ddm-starter-security.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.epam.digital.data.platform</groupId>
+      <artifactId>ddm-starter-actuator</artifactId>
+      <version>${ddm-starter-actuator.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.epam.digital.data.platform</groupId>
+      <artifactId>ddm-starter-logger</artifactId>
+      <version>${ddm-starter-logger.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.epam.digital.data.platform</groupId>
+      <artifactId>ddm-starter-error-handler</artifactId>
+      <version>${ddm-starter-error-handler.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.epam.digital.data.platform</groupId>
+      <artifactId>ddm-file-storage</artifactId>
+      <version>${ddm-file-storage.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.epam.digital.data.platform</groupId>
+      <artifactId>ddm-starter-validation</artifactId>
+      <version>${ddm-starter-validation.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.epam.digital.data.platform</groupId>
+      <artifactId>ddm-bpm-client</artifactId>
+      <version>${bpms-client.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-starter-kubernetes-client-config</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-logging</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-ui</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <optional>true</optional>
+    </dependency>
+
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>${apache.commons.io.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+      <version>${commons-codec.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.github.tomakehurst</groupId>
+      <artifactId>wiremock</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>29.0-jre</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>org.projectlombok</groupId>
+              <artifactId>lombok</artifactId>
+              <version>${lombok.version}</version>
+            </path>
+            <path>
+              <groupId>org.mapstruct</groupId>
+              <artifactId>mapstruct-processor</artifactId>
+              <version>${mapstruct.version}</version>
+            </path>
+          </annotationProcessorPaths>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <version>2.22.2</version>
+        <configuration>
+          <argLine>@{argLine} -Dspring.profiles.active=local</argLine>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

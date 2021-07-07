@@ -1,0 +1,1 @@
+**** xref:digital-document-service:digital-document-service.adoc[Сервіс цифрових документів]
