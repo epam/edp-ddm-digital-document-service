@@ -1,0 +1,19 @@
+image:
+  name: digital-document-service
+  version: latest
+port: 8080
+service:
+  type: ClusterIP
+  port: 8080
+replicas: 1
+
+ceph:
+  bucketName: lowcode-file-storage
+
+appConfigMountPath: "/app/config"
+cephSecretMountPath: "/app/secrets/ceph"
+readinessPath: "/actuator/health/readiness"
+livenessPath: "/actuator/health/liveness"
+
+ingress: # expose the service with a route or an ingress depending on platform type
+  platform: openshift # openshift or kubernetes

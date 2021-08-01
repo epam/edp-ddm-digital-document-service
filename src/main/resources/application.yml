@@ -1,0 +1,40 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: digital-document-service
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+  sleuth:
+    opentracing:
+      enabled: true
+    baggage:
+      correlation-enabled: true
+      correlation-fields: x-request-id
+      remote-fields: x-request-id, x-access-token
+
+# Configuration => prometheus.yml:
+#   scrape_configs:
+#     metrics_path: '/actuator/prometheus'
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  health:
+    kafka:
+      enabled: false
+
+springdoc:
+  swagger-ui:
+    path: "/swagger"
+
+ceph:
+  bucket: ${CEPH_BUCKET_NAME:bucket}
+
+digital-document-service:
+  content:
+    disposition-type: attachment
