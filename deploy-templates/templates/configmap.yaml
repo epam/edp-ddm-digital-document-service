@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}
+data:
+  application.yml: |-
+    server.max-http-header-size: 16KB
+    spring.servlet.multipart.max-request-size: 50MB
+    spring.servlet.multipart.max-file-size: 50MB
+    ceph.http-endpoint: https://s3-openshift-storage.{{ .Values.dnsWildcard }}
+    form-management-provider.url: http://form-management-provider:3001
+    bpms.url: http://bpms:8080
