@@ -1,13 +1,11 @@
 package com.epam.digital.data.platform.dgtldcmnt.service;
 
-import com.epam.digital.data.platform.bpms.client.ProcessInstanceHistoryRestClient;
 import com.epam.digital.data.platform.starter.validation.dto.ComponentsDto;
 import com.epam.digital.data.platform.starter.validation.dto.FormDto;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import org.camunda.bpm.engine.history.HistoricProcessInstance;
 import org.camunda.bpm.engine.rest.dto.task.TaskDto;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,22 +13,20 @@ import org.springframework.stereotype.Component;
 
 /**
  * Authorization service that determines if the client has permission or access to manage the
- * documents based on a context(process instance, form metadata, user task info etc).
+ * documents based on a context(process instance, form metadata, user task info etc.).
  */
 @Component
 @RequiredArgsConstructor
 public class AuthorizationService {
 
   public static final String TASK_NOT_FOUND_IN_PROCESS_INSTANCE_MSG = "The task (%s) does not belong to the process instance (%s)";
-  public static final String PROCESS_INSTANCE_IS_NOT_ACTIVE_MSG = "The process instance (%s) is not active";
+  public static final String TASK_IS_SUSPENDED_MSG = "The task (%s) is suspended";
   public static final String CURRENT_USER_IS_NOT_ASSIGNED_MSG = "Current user is not assigned for the task (%s)";
   public static final String FIELD_NAMES_NOT_FOUND_MSG = "Task form does not have fields with names %s";
 
-  private final ProcessInstanceHistoryRestClient processInstanceHistoryRestClient;
-
   /**
    * The method determines if the client has permission or access to manage the documents based on
-   * the documents context(process instance, form metadata, user task info etc) in which the
+   * the document's context(process instance, form metadata, user task info etc.) in which the
    * documents are loaded. Verification includes:
    *
    * <li> Checking task existence in the provided process instance(process instance id).
@@ -47,7 +43,7 @@ public class AuthorizationService {
   public void authorize(String processInstanceId, List<String> fieldNames, TaskDto taskDto,
       FormDto formDto) {
     checkTaskExistenceInProcessInstance(processInstanceId, taskDto);
-    checkProcessInstanceStatus(processInstanceId);
+    checkTaskStatus(taskDto);
     checkTaskAssignee(taskDto);
     checkFiledNamesExistence(fieldNames, formDto);
   }
@@ -59,12 +55,9 @@ public class AuthorizationService {
     }
   }
 
-  private void checkProcessInstanceStatus(String processInstanceId) {
-    var processInstances = processInstanceHistoryRestClient
-        .getProcessInstanceById(processInstanceId);
-    if (!HistoricProcessInstance.STATE_ACTIVE.equals(processInstances.getState())) {
-      throw new AccessDeniedException(
-          String.format(PROCESS_INSTANCE_IS_NOT_ACTIVE_MSG, processInstanceId));
+  private void checkTaskStatus(TaskDto taskDto) {
+    if (taskDto.isSuspended()) {
+      throw new AccessDeniedException(String.format(TASK_IS_SUSPENDED_MSG, taskDto.getId()));
     }
   }
 
