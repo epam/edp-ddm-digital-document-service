@@ -2,14 +2,18 @@ package com.epam.digital.data.platform.dgtldcmnt.service;
 
 import com.epam.digital.data.platform.starter.validation.dto.ComponentsDto;
 import com.epam.digital.data.platform.starter.validation.dto.FormDto;
+import com.epam.digital.data.platform.starter.validation.dto.NestedComponentDto;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.camunda.bpm.engine.rest.dto.task.TaskDto;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 /**
  * Authorization service that determines if the client has permission or access to manage the
@@ -70,7 +74,14 @@ public class AuthorizationService {
   }
 
   private void checkFiledNamesExistence(List<String> fieldNames, FormDto formDto) {
-    var formKeys = formDto.getComponents().stream().map(ComponentsDto::getKey)
+    var componentsKeys = formDto.getComponents().stream().map(ComponentsDto::getKey)
+        .collect(Collectors.toList());
+    var nestedComponentKeys = formDto.getComponents().stream()
+        .filter(c -> !CollectionUtils.isEmpty(c.getComponents()))
+        .flatMap(c -> c.getComponents().stream()).map(NestedComponentDto::getKey)
+        .collect(Collectors.toList());
+    var formKeys = Stream.of(componentsKeys, nestedComponentKeys)
+        .flatMap(Collection::stream)
         .collect(Collectors.toList());
     if (!formKeys.containsAll(fieldNames)) {
       var notFoundFiledNames = fieldNames.stream().filter(fn -> !formKeys.contains(fn))

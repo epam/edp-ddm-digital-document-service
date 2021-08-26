@@ -11,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import com.epam.digital.data.platform.dgtldcmnt.dto.TestTaskDto;
 import com.epam.digital.data.platform.starter.validation.dto.ComponentsDto;
 import com.epam.digital.data.platform.starter.validation.dto.FormDto;
+import com.epam.digital.data.platform.starter.validation.dto.NestedComponentDto;
 import java.util.ArrayList;
 import java.util.List;
 import org.camunda.bpm.engine.impl.persistence.entity.SuspensionState;
@@ -118,5 +119,16 @@ public class AuthorizationServiceTest {
 
     assertThat(exception.getMessage()).isEqualTo(
         String.format(FIELD_NAMES_NOT_FOUND_MSG, fieldNames));
+  }
+
+  @Test
+  public void shouldAuthorizeWithNestedComponentKeys() {
+    var nestedComponentDto = new NestedComponentDto("testUpload1", "file");
+    var componentsDtos = List
+        .of(new ComponentsDto(null, null, List.of(nestedComponentDto), null, null));
+    var formDto = new FormDto(componentsDtos);
+
+    assertDoesNotThrow(
+        () -> authorizationService.authorize(processInstanceId, fieldNames, taskDto, formDto));
   }
 }
