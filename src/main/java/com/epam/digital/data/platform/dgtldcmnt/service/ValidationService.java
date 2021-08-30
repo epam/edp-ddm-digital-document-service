@@ -6,12 +6,15 @@ import com.epam.digital.data.platform.starter.errorhandling.dto.ValidationErrorD
 import com.epam.digital.data.platform.starter.errorhandling.exception.ValidationException;
 import com.epam.digital.data.platform.starter.validation.dto.ComponentsDto;
 import com.epam.digital.data.platform.starter.validation.dto.FormDto;
+import com.epam.digital.data.platform.starter.validation.dto.NestedComponentDto;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.InvalidMimeTypeException;
 import org.springframework.util.MimeTypeUtils;
 
@@ -40,12 +43,27 @@ public class ValidationService {
    */
   public void validate(UploadDocumentDto uploadDto, FormDto formDto) {
     var fileComponent = formDto.getComponents().stream()
+        .flatMap(c -> {
+          if (!CollectionUtils.isEmpty(c.getComponents())) {
+            return c.getComponents().stream().map(this::toComponentsDto);
+          }
+          return Stream.of(c);
+        })
         .filter(c -> "file".equals(c.getType()) && uploadDto.getFieldName().equals(c.getKey()))
         .findFirst().orElseThrow(() -> createValidationException(
             String.format(FIELD_NOT_FOUND_MSG, uploadDto.getFieldName())));
 
     validateFileMaxSize(uploadDto.getSize(), fileComponent);
     validateFileType(uploadDto.getContentType(), fileComponent);
+  }
+
+  private ComponentsDto toComponentsDto(NestedComponentDto nestedComponentDto) {
+    return ComponentsDto.builder()
+        .fileMaxSize(nestedComponentDto.getFileMaxSize())
+        .filePattern(nestedComponentDto.getFilePattern())
+        .key(nestedComponentDto.getKey())
+        .type(nestedComponentDto.getType())
+        .build();
   }
 
   private void validateFileMaxSize(Long size, ComponentsDto componentsDto) {

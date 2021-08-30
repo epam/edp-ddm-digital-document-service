@@ -44,7 +44,7 @@ public class DocumentControllerIT extends BaseIT {
   public void init() {
     assignee = tokenParser.parseClaims(accessToken).getPreferredUsername();
     mockBpmsGetTaskById(taskId, assignee, processInstanceId, formKey);
-    mockFormProviderGetFormMetadata(formKey);
+    mockFormProviderGetFormMetadata(formKey, "/json/testFormMetadata.json");
     mockBpmsGetProcessInstanceById(processInstanceId);
   }
 
@@ -63,6 +63,30 @@ public class DocumentControllerIT extends BaseIT {
         .pathSegment(processInstanceId)
         .pathSegment(taskId)
         .pathSegment(fieldName)
+        .pathSegment(response.getId())
+        .toUriString();
+    assertThat(response.getUrl()).isEqualTo(expectedUrl);
+  }
+
+  @Test
+  public void shouldUploadDocumentWithEditGrid() {
+    mockFormProviderGetFormMetadata(formKey, "/json/formWithEditGridMetadata.json");
+    var hygienistCertificateFile = "hygienistCertificateFile";
+    var documentContextDto = createDocumentContextDto();
+    documentContextDto.setFieldName(hygienistCertificateFile);
+    var response = uploadFile(filename, contentType, data, documentContextDto);
+
+    assertThat(response).isNotNull();
+    assertThat(response.getName()).isEqualTo(filename);
+    assertThat(response.getType()).isEqualTo(contentType);
+    assertThat(response.getSize()).isEqualTo(1000L);
+    assertThat(response.getId()).isNotNull();
+    assertThat(response.getChecksum()).isEqualTo(DigestUtils.sha256Hex(data));
+    var expectedUrl = UriComponentsBuilder.newInstance().scheme("https").host(host)
+        .pathSegment("documents")
+        .pathSegment(processInstanceId)
+        .pathSegment(taskId)
+        .pathSegment(hygienistCertificateFile)
         .pathSegment(response.getId())
         .toUriString();
     assertThat(response.getUrl()).isEqualTo(expectedUrl);
@@ -205,9 +229,9 @@ public class DocumentControllerIT extends BaseIT {
   }
 
   @SneakyThrows
-  private void mockFormProviderGetFormMetadata(String formKey) {
+  private void mockFormProviderGetFormMetadata(String formKey, String formMetadataPath) {
     var formMetadata = new String(ByteStreams.toByteArray(
-        Objects.requireNonNull(BaseIT.class.getResourceAsStream("/json/testFormMetadata.json"))));
+        Objects.requireNonNull(BaseIT.class.getResourceAsStream(formMetadataPath))));
     formProviderServer.addStubMapping(
         stubFor(WireMock.get(urlPathEqualTo("/" + formKey))
             .willReturn(aResponse()

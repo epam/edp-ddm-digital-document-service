@@ -35,7 +35,7 @@ public class ValidationServiceTest {
   @Before
   public void init() {
     var componentsDtos = List
-        .of(new ComponentsDto(fieldName, "file", null, filePattern, fileMaxSize));
+        .of(new ComponentsDto(fieldName, "file", null, null, filePattern, fileMaxSize, null));
     formDto = new FormDto(componentsDtos);
   }
 
@@ -55,7 +55,7 @@ public class ValidationServiceTest {
   @Test
   public void shouldValidateWhenAllDocumentTypesAllowed() {
     var componentsDtos = List
-        .of(new ComponentsDto(fieldName, "file", null, "*", fileMaxSize));
+        .of(new ComponentsDto(fieldName, "file", null, null, "*", fileMaxSize, null));
     var formDto = new FormDto(componentsDtos);
     var uploadDto = UploadDocumentDto.builder()
         .processInstanceId(processInstanceId)
@@ -106,7 +106,7 @@ public class ValidationServiceTest {
   @Test
   public void shouldNotValidateFieldNotFound() {
     var componentsDtos = List
-        .of(new ComponentsDto("stingFiled", "string", null, null, null));
+        .of(new ComponentsDto("stingFiled", "string", null, null, null, null, null));
     var formDto = new FormDto(componentsDtos);
     var uploadDto = UploadDocumentDto.builder()
         .processInstanceId(processInstanceId)
@@ -126,7 +126,7 @@ public class ValidationServiceTest {
   public void shouldNotValidateUnsupportedFileSizeDefinition() {
     var invalidFilePattern = "50KB";
     var componentsDtos = List
-        .of(new ComponentsDto(fieldName, "file", null, filePattern, invalidFilePattern));
+        .of(new ComponentsDto(fieldName, "file", null, null, filePattern, invalidFilePattern, null));
     var formDto = new FormDto(componentsDtos);
     var uploadDto = UploadDocumentDto.builder()
         .processInstanceId(processInstanceId)
@@ -146,7 +146,7 @@ public class ValidationServiceTest {
   @Test
   public void shouldNotValidateDocumentTypeNotValid() {
     var componentsDtos = List
-        .of(new ComponentsDto(fieldName, "file", null, "*.zip", fileMaxSize));
+        .of(new ComponentsDto(fieldName, "file", null, null, "*.zip", fileMaxSize, null));
     var formDto = new FormDto(componentsDtos);
     var uploadDto = UploadDocumentDto.builder()
         .processInstanceId(processInstanceId)
