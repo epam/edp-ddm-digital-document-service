@@ -50,7 +50,7 @@ public class AuthorizationServiceTest {
     taskDto = TaskDto.fromEntity(task);
 
     var componentsDtos = List
-        .of(new ComponentsDto("testUpload1", "file", null, "application/pdf", "50MB"));
+        .of(new ComponentsDto("testUpload1", "file", null, null, "application/pdf", "50MB", null));
     formDto = new FormDto(componentsDtos);
 
     var principal = new User(assignee, "", new ArrayList<>());
@@ -111,7 +111,7 @@ public class AuthorizationServiceTest {
   @Test
   public void shouldNotAuthorizeFileNameNotFound() {
     var componentsDtos = List
-        .of(new ComponentsDto("invalidFiledName", "file", null, "application/pdf", "50MB"));
+        .of(new ComponentsDto("invalidFiledName", "file", null, null, "application/pdf", "50MB", null));
     var formDto = new FormDto(componentsDtos);
 
     var exception = assertThrows(AccessDeniedException.class,
@@ -123,9 +123,9 @@ public class AuthorizationServiceTest {
 
   @Test
   public void shouldAuthorizeWithNestedComponentKeys() {
-    var nestedComponentDto = new NestedComponentDto("testUpload1", "file");
+    var nestedComponentDto = new NestedComponentDto("testUpload1", "file", null, null, null, null);
     var componentsDtos = List
-        .of(new ComponentsDto(null, null, List.of(nestedComponentDto), null, null));
+        .of(new ComponentsDto(null, null, null, List.of(nestedComponentDto), null, null, null));
     var formDto = new FormDto(componentsDtos);
 
     assertDoesNotThrow(
