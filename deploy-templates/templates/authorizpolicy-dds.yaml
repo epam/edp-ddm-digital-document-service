@@ -15,5 +15,8 @@ spec:
       to:
         - operation:
             notPaths:
-              - /actuator*
+              - /actuator/*
+              - /swagger
+              - /swagger-ui/*
+              - /v3/api-docs*
   action: DENY
