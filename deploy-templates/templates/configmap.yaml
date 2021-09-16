@@ -10,3 +10,6 @@ data:
     ceph.http-endpoint: {{ .Values.ceph.host }}
     form-management-provider.url: http://form-management-provider:3001
     bpms.url: http://bpms:8080
+    {{- if eq .Values.deployProfile "dev" }}
+    management.endpoints.web.exposure.include: '*'
+    {{- end }}
