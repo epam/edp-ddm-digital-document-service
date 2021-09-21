@@ -7,9 +7,11 @@ import com.epam.digital.data.platform.starter.errorhandling.exception.Validation
 import com.epam.digital.data.platform.starter.validation.dto.ComponentsDto;
 import com.epam.digital.data.platform.starter.validation.dto.FormDto;
 import com.epam.digital.data.platform.starter.validation.dto.NestedComponentDto;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
@@ -21,6 +23,7 @@ import org.springframework.util.MimeTypeUtils;
 /**
  * Validation service that validates the document metadata based on the form metadata.
  */
+@Slf4j
 @Component
 public class ValidationService {
 
@@ -33,6 +36,8 @@ public class ValidationService {
   public static final String DIGIT_REGEX = "\\d";
   public static final String NON_DIGIT_REGEX = "\\D+";
 
+  private static final String FILE_TYPE = "file";
+
   public static final Set<String> ALLOWED_FILE_SIZE_DEFINITIONS = Set.of(MEGA_BYTES);
 
   /**
@@ -42,19 +47,28 @@ public class ValidationService {
    * @param formDto   contains metadata of the specified ui form.
    */
   public void validate(UploadDocumentDto uploadDto, FormDto formDto) {
+    log.debug("Validating file {} in task {} in form {}", uploadDto.getFieldName(),
+        uploadDto.getTaskId(), formDto);
+
     var fileComponent = formDto.getComponents().stream()
-        .flatMap(c -> {
-          if (!CollectionUtils.isEmpty(c.getComponents())) {
-            return c.getComponents().stream().map(this::toComponentsDto);
-          }
-          return Stream.of(c);
-        })
-        .filter(c -> "file".equals(c.getType()) && uploadDto.getFieldName().equals(c.getKey()))
-        .findFirst().orElseThrow(() -> createValidationException(
+        .flatMap(this::toComponentsStream)
+        .filter(c -> Objects.equals(FILE_TYPE, c.getType()))
+        .filter(c -> uploadDto.getFieldName().equals(c.getKey()))
+        .findFirst()
+        .orElseThrow(() -> createValidationException(
             String.format(FIELD_NOT_FOUND_MSG, uploadDto.getFieldName())));
 
     validateFileMaxSize(uploadDto.getSize(), fileComponent);
     validateFileType(uploadDto.getContentType(), fileComponent);
+    log.debug("File {} type and size are valid. Task {}", uploadDto.getFieldName(),
+        uploadDto.getTaskId());
+  }
+
+  private Stream<ComponentsDto> toComponentsStream(ComponentsDto c) {
+    if (!CollectionUtils.isEmpty(c.getComponents())) {
+      return c.getComponents().stream().map(this::toComponentsDto);
+    }
+    return Stream.of(c);
   }
 
   private ComponentsDto toComponentsDto(NestedComponentDto nestedComponentDto) {
@@ -68,19 +82,25 @@ public class ValidationService {
 
   private void validateFileMaxSize(Long size, ComponentsDto componentsDto) {
     var fileMaxSizePattern = componentsDto.getFileMaxSize();
-    var fileSizeDefinition = fileMaxSizePattern.replaceAll(DIGIT_REGEX, StringUtils.EMPTY);
-    if (!ALLOWED_FILE_SIZE_DEFINITIONS.contains(fileSizeDefinition)) {
-      throw createValidationException(
-          String.format(UNSUPPORTED_FILE_SIZE_DEFINITION_MSG, fileSizeDefinition,
-              ALLOWED_FILE_SIZE_DEFINITIONS));
-    }
+    var fileSizeDefinition = getValidFileSizeDefinition(fileMaxSizePattern);
+
     var fileSize = getFileSizeBySizeDefinition(size, fileSizeDefinition);
     var fileMaxSize =
-        Double.valueOf(fileMaxSizePattern.replaceAll(NON_DIGIT_REGEX, StringUtils.EMPTY));
+        Double.parseDouble(fileMaxSizePattern.replaceAll(NON_DIGIT_REGEX, StringUtils.EMPTY));
     if (fileSize > fileMaxSize) {
       throw createValidationException(
           String.format(FILE_SIZE_EXCEEDS_MAX_FILE_SIZE_MSG, fileMaxSizePattern));
     }
+  }
+
+  private String getValidFileSizeDefinition(String fileMaxSizePattern) {
+    var fileSizeDefinition = fileMaxSizePattern.replaceAll(DIGIT_REGEX, StringUtils.EMPTY);
+    if (ALLOWED_FILE_SIZE_DEFINITIONS.contains(fileSizeDefinition)) {
+      return fileSizeDefinition;
+    }
+    throw createValidationException(
+        String.format(UNSUPPORTED_FILE_SIZE_DEFINITION_MSG, fileSizeDefinition,
+            ALLOWED_FILE_SIZE_DEFINITIONS));
   }
 
   private void validateFileType(String contentType, ComponentsDto componentsDto) {
@@ -111,7 +131,7 @@ public class ValidationService {
     }
   }
 
-  private Double getFileSizeBySizeDefinition(Long size, String fileSizeDefinition) {
+  private double getFileSizeBySizeDefinition(Long size, String fileSizeDefinition) {
     if (MEGA_BYTES.equals(fileSizeDefinition)) {
       return getSizeInMegaBytes(size);
     }
@@ -120,7 +140,7 @@ public class ValidationService {
             ALLOWED_FILE_SIZE_DEFINITIONS));
   }
 
-  private Double getSizeInMegaBytes(Long size) {
+  private double getSizeInMegaBytes(Long size) {
     return (double) size / (1024 * 1024);
   }
 }
