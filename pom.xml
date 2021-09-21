@@ -12,18 +12,18 @@
   </parent>
 
   <artifactId>digital-document-service</artifactId>
-  <version>1.4.0-SNAPSHOT</version>
+  <version>1.5.0-SNAPSHOT</version>
   <name>digital-document-service</name>
   <description>Digital document service</description>
 
   <properties>
-    <ddm-ceph-client.version>1.4.0-SNAPSHOT</ddm-ceph-client.version>
-    <ddm-starter-security.version>1.4.0-SNAPSHOT</ddm-starter-security.version>
-    <ddm-starter-actuator.version>1.4.3-SNAPSHOT</ddm-starter-actuator.version>
-    <ddm-starter-logger.version>1.2.0</ddm-starter-logger.version>
-    <ddm-starter-error-handler.version>1.4.0-SNAPSHOT</ddm-starter-error-handler.version>
-    <ddm-starter-validation.version>1.4.2-SNAPSHOT</ddm-starter-validation.version>
-    <bpms-client.version>1.4.0-SNAPSHOT</bpms-client.version>
+    <ddm-ceph-client.version>1.4.0</ddm-ceph-client.version>
+    <ddm-starter-security.version>1.2.1</ddm-starter-security.version>
+    <ddm-starter-actuator.version>1.4.0</ddm-starter-actuator.version>
+    <ddm-starter-logger.version>1.4.0</ddm-starter-logger.version>
+    <ddm-starter-error-handler.version>1.4.0</ddm-starter-error-handler.version>
+    <ddm-starter-validation.version>1.4.0</ddm-starter-validation.version>
+    <bpms-client.version>1.4.0</bpms-client.version>
 
     <apache.commons.io.version>2.6</apache.commons.io.version>
 
