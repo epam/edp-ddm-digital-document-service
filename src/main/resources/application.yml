@@ -13,8 +13,8 @@ spring:
       enabled: true
     baggage:
       correlation-enabled: true
-      correlation-fields: x-request-id
-      remote-fields: x-request-id, x-access-token
+      correlation-fields: x-request-id, X-Primary-Request-URL
+      remote-fields: x-request-id, x-access-token, X-Primary-Request-URL
 
 # Configuration => prometheus.yml:
 #   scrape_configs:
@@ -45,8 +45,30 @@ springdoc:
   swagger-ui:
     path: "/swagger"
 
+platform:
+  logging:
+    aspect:
+      enabled: false
+    primary-url:
+      enabled: true
+
 ceph:
   bucket: ${CEPH_BUCKET_NAME:bucket}
+
+logbook:
+  feign:
+    enabled: true
+  info-logging:
+    enabled: true
+  strategy: request-body-on-debug
+  exclude:
+    - /v3/api-docs/**
+    - /swagger-ui/**
+    - /actuator/**
+    - /swagger
+  obfuscate:
+    headers:
+      - x-access-token
 
 digital-document-service:
   content:

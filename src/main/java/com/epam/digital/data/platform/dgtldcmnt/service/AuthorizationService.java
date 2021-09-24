@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.engine.rest.dto.task.TaskDto;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,6 +20,7 @@ import org.springframework.util.CollectionUtils;
  * Authorization service that determines if the client has permission or access to manage the
  * documents based on a context(process instance, form metadata, user task info etc.).
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class AuthorizationService {
@@ -46,10 +48,13 @@ public class AuthorizationService {
    */
   public void authorize(String processInstanceId, List<String> fieldNames, TaskDto taskDto,
       FormDto formDto) {
+    log.debug("Starting authorization for files {} for task {} in process {}", fieldNames,
+        taskDto.getId(), processInstanceId);
     checkTaskExistenceInProcessInstance(processInstanceId, taskDto);
     checkTaskStatus(taskDto);
     checkTaskAssignee(taskDto);
     checkFiledNamesExistence(fieldNames, formDto);
+    log.debug("Files {} for task {} have been authorized for user", fieldNames, taskDto.getId());
   }
 
   private void checkTaskExistenceInProcessInstance(String processInstanceId, TaskDto taskDto) {
@@ -57,12 +62,14 @@ public class AuthorizationService {
       throw new AccessDeniedException(String.format(TASK_NOT_FOUND_IN_PROCESS_INSTANCE_MSG,
           taskDto.getId(), processInstanceId));
     }
+    log.trace("Task's {} process instance was verified ({})", taskDto.getId(), processInstanceId);
   }
 
   private void checkTaskStatus(TaskDto taskDto) {
     if (taskDto.isSuspended()) {
       throw new AccessDeniedException(String.format(TASK_IS_SUSPENDED_MSG, taskDto.getId()));
     }
+    log.trace("Verified that task {} isn't suspended", taskDto.getId());
   }
 
   private void checkTaskAssignee(TaskDto taskDto) {
@@ -71,6 +78,8 @@ public class AuthorizationService {
       throw new AccessDeniedException(
           String.format(CURRENT_USER_IS_NOT_ASSIGNED_MSG, taskDto.getId()));
     }
+    log.trace("Verified that current user {} has assigned to task {}", authentication.getName(),
+        taskDto.getId());
   }
 
   private void checkFiledNamesExistence(List<String> fieldNames, FormDto formDto) {
@@ -88,5 +97,6 @@ public class AuthorizationService {
           .collect(Collectors.toList());
       throw new AccessDeniedException(String.format(FIELD_NAMES_NOT_FOUND_MSG, notFoundFiledNames));
     }
+    log.trace("Verified that all field names {} are present on form {}", fieldNames, formDto);
   }
 }

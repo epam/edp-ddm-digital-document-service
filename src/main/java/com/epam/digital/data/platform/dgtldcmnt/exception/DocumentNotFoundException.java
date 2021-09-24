@@ -1,7 +1,6 @@
 package com.epam.digital.data.platform.dgtldcmnt.exception;
 
 import java.util.Collection;
-import java.util.List;
 import lombok.Getter;
 
 /**

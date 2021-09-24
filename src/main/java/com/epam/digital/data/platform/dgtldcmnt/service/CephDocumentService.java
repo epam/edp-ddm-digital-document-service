@@ -59,6 +59,7 @@ public class CephDocumentService implements DocumentService {
     var url = generateGetDocumentUrl(uploadDocumentDto.getOriginRequestUrl(),
         uploadDocumentDto.getProcessInstanceId(), uploadDocumentDto.getTaskId(),
         uploadDocumentDto.getFieldName(), id);
+    log.debug("File {} uploaded. Id {}", uploadDocumentDto.getFilename(), id);
     return DocumentMetadataDto.builder()
         .size(objectMetadata.getContentLength())
         .name(uploadDocumentDto.getFilename())
@@ -77,6 +78,7 @@ public class CephDocumentService implements DocumentService {
         .generateKey(getDocumentDto.getId(), getDocumentDto.getProcessInstanceId());
     var s3Object = s3ObjectCephService.get(key)
         .orElseThrow(() -> new DocumentNotFoundException(List.of(getDocumentDto.getId())));
+    log.debug("File downloaded. Id {}", getDocumentDto.getId());
     return DocumentDto.builder()
         .name(decodeUtf8(
             s3Object.getObjectMetadata().getUserMetaDataOf(UserMetadataHeaders.FILENAME)))
@@ -94,12 +96,13 @@ public class CephDocumentService implements DocumentService {
     var ids = documentIdAndFiledNameMap.keySet().stream()
         .map(id -> keyProvider.generateKey(id, getMetadataDto.getProcessInstanceId()))
         .collect(Collectors.toList());
-    return s3ObjectCephService.getMetadata(ids)
+    var result = s3ObjectCephService.getMetadata(ids)
         .map(metadataList -> metadataList.stream()
             .map(objectMetadata -> map(objectMetadata, getMetadataDto, documentIdAndFiledNameMap))
             .collect(Collectors.toList())
         ).orElseThrow(() -> new DocumentNotFoundException(documentIdAndFiledNameMap.keySet()));
-
+    log.debug("Documents metadata by ids {} received", getMetadataDto.getDocuments());
+    return result;
   }
 
   private DocumentMetadataDto map(ObjectMetadata objectMetadata,

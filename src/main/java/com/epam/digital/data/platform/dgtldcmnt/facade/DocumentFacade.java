@@ -14,11 +14,13 @@ import com.epam.digital.data.platform.starter.validation.client.FormManagementPr
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 /**
  * The document facade for management of the documents. It contains authorization and validation.
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class DocumentFacade {
@@ -36,14 +38,21 @@ public class DocumentFacade {
    * @return {@link DocumentMetadataDto} of the saved document.
    */
   public DocumentMetadataDto put(UploadDocumentDto uploadDocumentDto) {
-    var task = taskRestClient.getTaskById(uploadDocumentDto.getTaskId());
+    var taskId = uploadDocumentDto.getTaskId();
+    var processInstanceId = uploadDocumentDto.getProcessInstanceId();
+    var fieldName = uploadDocumentDto.getFieldName();
+    log.info("Uploading file {} to storage for task {} in process {}", fieldName, taskId,
+        processInstanceId);
+
+    var task = taskRestClient.getTaskById(taskId);
     var form = formProviderClient.getForm(task.getFormKey());
 
-    authorizationService.authorize(uploadDocumentDto.getProcessInstanceId(),
-        List.of(uploadDocumentDto.getFieldName()), task, form);
+    authorizationService.authorize(processInstanceId, List.of(fieldName), task, form);
     validationService.validate(uploadDocumentDto, form);
 
-    return documentService.put(uploadDocumentDto);
+    var result = documentService.put(uploadDocumentDto);
+    log.info("File {} for task {} has been uploaded", fieldName, taskId);
+    return result;
   }
 
   /**
@@ -54,10 +63,16 @@ public class DocumentFacade {
    * @return document representation.
    */
   public DocumentDto get(GetDocumentDto getDocumentDto) {
-    authorize(getDocumentDto.getProcessInstanceId(), getDocumentDto.getTaskId(),
-        List.of(getDocumentDto.getFieldName()));
+    var taskId = getDocumentDto.getTaskId();
+    var processInstanceId = getDocumentDto.getProcessInstanceId();
+    var fieldName = getDocumentDto.getFieldName();
+    log.info("Downloading file {} for task {} in process {}", fieldName, taskId, processInstanceId);
 
-    return documentService.get(getDocumentDto);
+    authorize(processInstanceId, taskId, List.of(fieldName));
+
+    var result = documentService.get(getDocumentDto);
+    log.info("File {} for task {} has been downloaded", fieldName, taskId);
+    return result;
   }
 
   /**
@@ -68,11 +83,18 @@ public class DocumentFacade {
    * @return list of documents metadata.
    */
   public List<DocumentMetadataDto> getMetadata(GetDocumentsMetadataDto getMetadataDto) {
-    var filedNames = getMetadataDto.getDocuments().stream()
+    var fieldNames = getMetadataDto.getDocuments().stream()
         .map(DocumentIdDto::getFieldName).collect(Collectors.toList());
-    authorize(getMetadataDto.getProcessInstanceId(), getMetadataDto.getTaskId(), filedNames);
+    var taskId = getMetadataDto.getTaskId();
+    var processInstanceId = getMetadataDto.getProcessInstanceId();
+    log.info("Getting files metadata {} for task {} in process {}", fieldNames, taskId,
+        processInstanceId);
 
-    return documentService.getMetadata(getMetadataDto);
+    authorize(getMetadataDto.getProcessInstanceId(), getMetadataDto.getTaskId(), fieldNames);
+
+    var result = documentService.getMetadata(getMetadataDto);
+    log.info("Files metadata {} for task {} has been downloaded", fieldNames, taskId);
+    return result;
   }
 
   private void authorize(String processInstance, String taskId, List<String> filedNames) {
