@@ -23,3 +23,5 @@ keycloak:
     officer: officer-portal
     citizen: citizen-portal
   certificatesEndpoint: /protocol/openid-connect/certs
+
+deployProfile: prod
