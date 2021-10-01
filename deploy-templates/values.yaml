@@ -25,3 +25,5 @@ keycloak:
   certificatesEndpoint: /protocol/openid-connect/certs
 
 deployProfile: prod
+
+javaOpts: "-Xms512m -Xmx512m"
