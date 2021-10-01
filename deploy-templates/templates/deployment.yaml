@@ -32,7 +32,7 @@ spec:
             path: {{ .Values.livenessPath }}
             port: {{ .Values.port }}
           failureThreshold: 10
-          initialDelaySeconds: 15
+          initialDelaySeconds: 70
           periodSeconds: 10
           successThreshold: 1
           timeoutSeconds: 5
@@ -41,17 +41,17 @@ spec:
             path: {{ .Values.readinessPath }}
             port: {{ .Values.port }}
           failureThreshold: 10
-          initialDelaySeconds: 15
+          initialDelaySeconds: 70
           periodSeconds: 10
           successThreshold: 1
           timeoutSeconds: 5
         resources:
           limits:
             cpu: 500m
-            memory: 1.5Gi
+            memory: 768Mi
           requests:
             cpu: 500m
-            memory: 1.5Gi
+            memory: 768Mi
         env:
           - name: CEPH_BUCKET_HOST
             valueFrom:
@@ -68,6 +68,8 @@ spec:
               configMapKeyRef:
                 name: {{ .Values.ceph.bucketName }}
                 key: BUCKET_NAME
+          - name: JAVA_OPTS
+            value: {{ .Values.javaOpts }}
         volumeMounts:
           - name: {{ .Chart.Name }}
             mountPath: {{ .Values.appConfigMountPath }}
