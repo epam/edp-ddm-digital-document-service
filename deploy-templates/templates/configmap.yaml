@@ -7,6 +7,6 @@ data:
     server.max-http-header-size: 16KB
     spring.servlet.multipart.max-request-size: 50MB
     spring.servlet.multipart.max-file-size: 50MB
-    ceph.http-endpoint: http://s3.openshift-storage.svc.cluster.local
+    ceph.http-endpoint: {{ .Values.ceph.host }}
     form-management-provider.url: http://form-management-provider:3001
     bpms.url: http://bpms:8080
