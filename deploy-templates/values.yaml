@@ -9,6 +9,7 @@ replicas: 1
 
 ceph:
   bucketName: lowcode-file-storage
+  host: ${CEPH_BUCKET_HOST}
 
 appConfigMountPath: "/app/config"
 cephSecretMountPath: "/app/secrets/ceph"
