@@ -60,7 +60,7 @@ logbook:
     enabled: true
   info-logging:
     enabled: true
-  strategy: request-body-on-debug
+  strategy: without-body
   exclude:
     - /v3/api-docs/**
     - /swagger-ui/**
