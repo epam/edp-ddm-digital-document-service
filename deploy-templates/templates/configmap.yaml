@@ -4,7 +4,7 @@ metadata:
   name: {{ .Chart.Name }}
 data:
   application.yml: |-
-    server.max-http-header-size: 16KB
+    server.max-http-header-size: 32KB
     spring.servlet.multipart.max-request-size: 50MB
     spring.servlet.multipart.max-file-size: 50MB
     ceph.http-endpoint: {{ .Values.ceph.host }}
