@@ -12,7 +12,7 @@
   </parent>
 
   <artifactId>digital-document-service</artifactId>
-  <version>1.5.0-SNAPSHOT</version>
+  <version>1.5.1-SNAPSHOT</version>
   <name>digital-document-service</name>
   <description>Digital document service</description>
 
@@ -23,7 +23,7 @@
     <ddm-starter-logger.version>1.5.0-SNAPSHOT</ddm-starter-logger.version>
     <ddm-starter-error-handler.version>1.4.0</ddm-starter-error-handler.version>
     <ddm-starter-validation.version>1.4.0</ddm-starter-validation.version>
-    <bpms-client.version>1.4.0</bpms-client.version>
+    <bpms-client.version>1.5.1-SNAPSHOT</bpms-client.version>
 
     <apache.commons.io.version>2.6</apache.commons.io.version>
 
