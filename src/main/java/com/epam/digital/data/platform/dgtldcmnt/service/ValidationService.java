@@ -7,7 +7,7 @@ import com.epam.digital.data.platform.starter.errorhandling.exception.Validation
 import com.epam.digital.data.platform.starter.validation.dto.ComponentsDto;
 import com.epam.digital.data.platform.starter.validation.dto.FormDto;
 import com.epam.digital.data.platform.starter.validation.dto.NestedComponentDto;
-import java.util.Objects;
+import com.epam.digital.data.platform.starter.validation.dto.enums.FileType;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -36,8 +36,6 @@ public class ValidationService {
   public static final String DIGIT_REGEX = "\\d";
   public static final String NON_DIGIT_REGEX = "\\D+";
 
-  private static final String FILE_TYPE = "file";
-
   public static final Set<String> ALLOWED_FILE_SIZE_DEFINITIONS = Set.of(MEGA_BYTES);
 
   /**
@@ -52,7 +50,7 @@ public class ValidationService {
 
     var fileComponent = formDto.getComponents().stream()
         .flatMap(this::toComponentsStream)
-        .filter(c -> Objects.equals(FILE_TYPE, c.getType()))
+        .filter(c -> FileType.isValidFileType(c.getType()))
         .filter(c -> uploadDto.getFieldName().equals(c.getKey()))
         .findFirst()
         .orElseThrow(() -> createValidationException(
