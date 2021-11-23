@@ -21,14 +21,13 @@ import com.epam.digital.data.platform.starter.validation.dto.FormDto;
 import com.epam.digital.data.platform.starter.validation.dto.NestedComponentDto;
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.engine.rest.dto.task.TaskDto;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -60,15 +59,16 @@ public class AuthorizationService {
    * @param fieldNames        the field names of the ui form in which documents are loaded.
    * @param taskDto           the task in which the documents are loaded.
    * @param formDto           the ui form in which the documents are loaded.
+   * @param authentication    object with authentication data.
    * @throws AccessDeniedException when user does not have permission or access to the documents.
    */
   public void authorize(String processInstanceId, List<String> fieldNames, TaskDto taskDto,
-      FormDto formDto) {
+      FormDto formDto, Authentication authentication) {
     log.debug("Starting authorization for files {} for task {} in process {}", fieldNames,
         taskDto.getId(), processInstanceId);
     checkTaskExistenceInProcessInstance(processInstanceId, taskDto);
     checkTaskStatus(taskDto);
-    checkTaskAssignee(taskDto);
+    checkTaskAssignee(taskDto, authentication);
     checkFiledNamesExistence(fieldNames, formDto);
     log.debug("Files {} for task {} have been authorized for user", fieldNames, taskDto.getId());
   }
@@ -88,9 +88,8 @@ public class AuthorizationService {
     log.trace("Verified that task {} isn't suspended", taskDto.getId());
   }
 
-  private void checkTaskAssignee(TaskDto taskDto) {
-    var authentication = SecurityContextHolder.getContext().getAuthentication();
-    if (Objects.isNull(authentication) || !authentication.getName().equals(taskDto.getAssignee())) {
+  private void checkTaskAssignee(TaskDto taskDto, Authentication authentication) {
+    if (!authentication.getName().equals(taskDto.getAssignee())) {
       throw new AccessDeniedException(
           String.format(CURRENT_USER_IS_NOT_ASSIGNED_MSG, taskDto.getId()));
     }

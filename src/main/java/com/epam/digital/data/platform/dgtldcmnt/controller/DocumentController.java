@@ -38,6 +38,7 @@ import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -73,6 +74,7 @@ public class DocumentController {
    * @param fieldName         specified filed name.
    * @param file              {@link MultipartFile} representation of a document.
    * @param filename          specified filename(optional).
+   * @param authentication    object with authentication data.
    * @return {@link DocumentMetadataDto} with metadata of the stored document.
    */
   @PostMapping("/{processInstanceId}/{taskId}/{fieldName}")
@@ -87,7 +89,8 @@ public class DocumentController {
       @PathVariable("taskId") String taskId,
       @PathVariable("fieldName") String fieldName,
       @RequestParam("file") MultipartFile file,
-      @RequestParam(required = false, name = "filename") String filename) throws IOException {
+      @RequestParam(required = false, name = "filename") String filename,
+      Authentication authentication) throws IOException {
     var uploadDocumentDto = UploadDocumentDto.builder()
         .filename(Objects.isNull(filename) ? file.getOriginalFilename() : filename)
         .fileInputStream(file.getInputStream())
@@ -98,7 +101,7 @@ public class DocumentController {
         .size(file.getSize())
         .taskId(taskId)
         .build();
-    return documentFacade.put(uploadDocumentDto);
+    return documentFacade.put(uploadDocumentDto, authentication);
   }
 
   /**
@@ -108,6 +111,7 @@ public class DocumentController {
    * @param taskId            specified task id.
    * @param fieldName         specified filed name.
    * @param id                specified document id.
+   * @param authentication    object with authentication data.
    * @return document as {@link InputStreamResource}.
    */
   @GetMapping("/{processInstanceId}/{taskId}/{fieldName}/{id}")
@@ -116,14 +120,15 @@ public class DocumentController {
       @PathVariable("processInstanceId") String processInstanceId,
       @PathVariable("taskId") String taskId,
       @PathVariable("fieldName") String fieldName,
-      @PathVariable("id") String id) {
+      @PathVariable("id") String id,
+      Authentication authentication) {
     var getDocumentDto = GetDocumentDto.builder()
         .processInstanceId(processInstanceId)
         .fieldName(fieldName)
         .taskId(taskId)
         .id(id)
         .build();
-    var documentDto = documentFacade.get(getDocumentDto);
+    var documentDto = documentFacade.get(getDocumentDto, authentication);
     var contentDisposition = ContentDisposition.builder(contentDispositionType)
         .filename(documentDto.getName()).build();
     var headers = new HttpHeaders();
@@ -142,13 +147,14 @@ public class DocumentController {
       @RequestHeader(X_FORWARDED_HOST_HEADER) String originRequestUrl,
       @PathVariable("processInstanceId") String processInstanceId,
       @PathVariable("taskId") String taskId,
-      @Valid @RequestBody DocumentMetadataSearchRequestDto requestDto) {
+      @Valid @RequestBody DocumentMetadataSearchRequestDto requestDto,
+      Authentication authentication) {
     var getDocumentsMetadataDto = GetDocumentsMetadataDto.builder()
         .documents(requestDto.getDocuments())
         .processInstanceId(processInstanceId)
         .originRequestUrl(originRequestUrl)
         .taskId(taskId)
         .build();
-    return documentFacade.getMetadata(getDocumentsMetadataDto);
+    return documentFacade.getMetadata(getDocumentsMetadataDto, authentication);
   }
 }
