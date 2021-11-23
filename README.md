@@ -7,7 +7,7 @@
 * uploading and viewing digital documents by users through UI-forms of business process tasks;
 * validation of digital documents when downloading for compliance with the restrictions configured
   for file fields of UI-forms.
-  
+
 ### Usage
 
 #### Prerequisites:
@@ -42,8 +42,8 @@ Available properties are following:
 
 * Tests could be run via maven command:
     * `mvn verify` OR using appropriate functions of your IDE.
-    
+
 ### License
 
-The digital-document-service is released under version 2.0 of
-the [Apache License](https://www.apache.org/licenses/LICENSE-2.0).
+The digital-document-service is Open Source software released under
+the [Apache 2.0 license](https://www.apache.org/licenses/LICENSE-2.0).
