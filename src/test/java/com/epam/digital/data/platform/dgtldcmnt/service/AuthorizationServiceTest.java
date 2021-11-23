@@ -38,7 +38,7 @@ import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.User;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -54,6 +54,7 @@ public class AuthorizationServiceTest {
 
   private TaskDto taskDto;
   private FormDto formDto;
+  private Authentication authentication;
 
   @Before
   public void init() {
@@ -70,21 +71,22 @@ public class AuthorizationServiceTest {
     formDto = new FormDto(componentsDtos);
 
     var principal = new User(assignee, "", new ArrayList<>());
-    var authentication = new UsernamePasswordAuthenticationToken(principal, null, null);
-    SecurityContextHolder.getContext().setAuthentication(authentication);
+    authentication = new UsernamePasswordAuthenticationToken(principal, null, null);
   }
 
   @Test
   public void shouldAuthorize() {
     assertDoesNotThrow(
-        () -> authorizationService.authorize(processInstanceId, fieldNames, taskDto, formDto));
+        () -> authorizationService
+            .authorize(processInstanceId, fieldNames, taskDto, formDto, authentication));
   }
 
   @Test
   public void shouldNotAuthorizeTaskDoesNotBelongToProcessInstance() {
     var invalidProcessInstance = "invalidProcessInstance";
     var exception = assertThrows(AccessDeniedException.class,
-        () -> authorizationService.authorize(invalidProcessInstance, fieldNames, taskDto, formDto));
+        () -> authorizationService
+            .authorize(invalidProcessInstance, fieldNames, taskDto, formDto, authentication));
 
     assertThat(exception.getMessage()).isEqualTo(
         String.format(TASK_NOT_FOUND_IN_PROCESS_INSTANCE_MSG, taskId, invalidProcessInstance));
@@ -103,7 +105,7 @@ public class AuthorizationServiceTest {
 
     var exception = assertThrows(AccessDeniedException.class,
         () -> authorizationService.authorize(notActiveProcessInstanceId, fieldNames, taskDto,
-            formDto));
+            formDto, authentication));
 
     assertThat(exception.getMessage()).isEqualTo(String.format(TASK_IS_SUSPENDED_MSG, taskId));
   }
@@ -118,7 +120,8 @@ public class AuthorizationServiceTest {
     var taskDto = TaskDto.fromEntity(task);
 
     var exception = assertThrows(AccessDeniedException.class,
-        () -> authorizationService.authorize(processInstanceId, fieldNames, taskDto, formDto));
+        () -> authorizationService
+            .authorize(processInstanceId, fieldNames, taskDto, formDto, authentication));
 
     assertThat(exception.getMessage()).isEqualTo(
         String.format(CURRENT_USER_IS_NOT_ASSIGNED_MSG, taskId));
@@ -127,11 +130,13 @@ public class AuthorizationServiceTest {
   @Test
   public void shouldNotAuthorizeFileNameNotFound() {
     var componentsDtos = List
-        .of(new ComponentsDto("invalidFiledName", "file", null, null, "application/pdf", "50MB", null));
+        .of(new ComponentsDto("invalidFiledName", "file", null, null, "application/pdf", "50MB",
+            null));
     var formDto = new FormDto(componentsDtos);
 
     var exception = assertThrows(AccessDeniedException.class,
-        () -> authorizationService.authorize(processInstanceId, fieldNames, taskDto, formDto));
+        () -> authorizationService
+            .authorize(processInstanceId, fieldNames, taskDto, formDto, authentication));
 
     assertThat(exception.getMessage()).isEqualTo(
         String.format(FIELD_NAMES_NOT_FOUND_MSG, fieldNames));
@@ -145,6 +150,7 @@ public class AuthorizationServiceTest {
     var formDto = new FormDto(componentsDtos);
 
     assertDoesNotThrow(
-        () -> authorizationService.authorize(processInstanceId, fieldNames, taskDto, formDto));
+        () -> authorizationService
+            .authorize(processInstanceId, fieldNames, taskDto, formDto, authentication));
   }
 }

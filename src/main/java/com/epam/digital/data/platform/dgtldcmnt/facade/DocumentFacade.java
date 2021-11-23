@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 /**
@@ -51,9 +52,11 @@ public class DocumentFacade {
    * Put document to storage. Before uploading the method does authorization and validation.
    *
    * @param uploadDocumentDto contains file input stream, metadata, and document context info.
+   * @param authentication    object with authentication data.
    * @return {@link DocumentMetadataDto} of the saved document.
    */
-  public DocumentMetadataDto put(UploadDocumentDto uploadDocumentDto) {
+  public DocumentMetadataDto put(UploadDocumentDto uploadDocumentDto,
+      Authentication authentication) {
     var taskId = uploadDocumentDto.getTaskId();
     var processInstanceId = uploadDocumentDto.getProcessInstanceId();
     var fieldName = uploadDocumentDto.getFieldName();
@@ -63,7 +66,8 @@ public class DocumentFacade {
     var task = taskRestClient.getTaskById(taskId);
     var form = formProviderClient.getForm(task.getFormKey());
 
-    authorizationService.authorize(processInstanceId, List.of(fieldName), task, form);
+    authorizationService
+        .authorize(processInstanceId, List.of(fieldName), task, form, authentication);
     validationService.validate(uploadDocumentDto, form);
 
     var result = documentService.put(uploadDocumentDto);
@@ -76,15 +80,16 @@ public class DocumentFacade {
    * validation.
    *
    * @param getDocumentDto contains document id and context of the document.
+   * @param authentication object with authentication data.
    * @return document representation.
    */
-  public DocumentDto get(GetDocumentDto getDocumentDto) {
+  public DocumentDto get(GetDocumentDto getDocumentDto, Authentication authentication) {
     var taskId = getDocumentDto.getTaskId();
     var processInstanceId = getDocumentDto.getProcessInstanceId();
     var fieldName = getDocumentDto.getFieldName();
     log.info("Downloading file {} for task {} in process {}", fieldName, taskId, processInstanceId);
 
-    authorize(processInstanceId, taskId, List.of(fieldName));
+    authorize(processInstanceId, taskId, List.of(fieldName), authentication);
 
     var result = documentService.get(getDocumentDto);
     log.info("File {} for task {} has been downloaded", fieldName, taskId);
@@ -96,9 +101,11 @@ public class DocumentFacade {
    * validation.
    *
    * @param getMetadataDto contains document ids and a context of the documents.
+   * @param authentication object with authentication data.
    * @return list of documents metadata.
    */
-  public List<DocumentMetadataDto> getMetadata(GetDocumentsMetadataDto getMetadataDto) {
+  public List<DocumentMetadataDto> getMetadata(GetDocumentsMetadataDto getMetadataDto,
+      Authentication authentication) {
     var fieldNames = getMetadataDto.getDocuments().stream()
         .map(DocumentIdDto::getFieldName).collect(Collectors.toList());
     var taskId = getMetadataDto.getTaskId();
@@ -106,17 +113,19 @@ public class DocumentFacade {
     log.info("Getting files metadata {} for task {} in process {}", fieldNames, taskId,
         processInstanceId);
 
-    authorize(getMetadataDto.getProcessInstanceId(), getMetadataDto.getTaskId(), fieldNames);
+    authorize(getMetadataDto.getProcessInstanceId(), getMetadataDto.getTaskId(), fieldNames,
+        authentication);
 
     var result = documentService.getMetadata(getMetadataDto);
     log.info("Files metadata {} for task {} has been downloaded", fieldNames, taskId);
     return result;
   }
 
-  private void authorize(String processInstance, String taskId, List<String> filedNames) {
+  private void authorize(String processInstance, String taskId, List<String> filedNames,
+      Authentication authentication) {
     var task = taskRestClient.getTaskById(taskId);
     var form = formProviderClient.getForm(task.getFormKey());
 
-    authorizationService.authorize(processInstance, filedNames, task, form);
+    authorizationService.authorize(processInstance, filedNames, task, form, authentication);
   }
 }
