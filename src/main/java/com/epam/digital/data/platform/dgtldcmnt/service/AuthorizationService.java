@@ -69,7 +69,7 @@ public class AuthorizationService {
     checkTaskExistenceInProcessInstance(processInstanceId, taskDto);
     checkTaskStatus(taskDto);
     checkTaskAssignee(taskDto, authentication);
-    checkFiledNamesExistence(fieldNames, formDto);
+    checkFieldNamesExistence(fieldNames, formDto);
     log.debug("Files {} for task {} have been authorized for user", fieldNames, taskDto.getId());
   }
 
@@ -97,7 +97,7 @@ public class AuthorizationService {
         taskDto.getId());
   }
 
-  private void checkFiledNamesExistence(List<String> fieldNames, FormDto formDto) {
+  private void checkFieldNamesExistence(List<String> fieldNames, FormDto formDto) {
     var componentsKeys = formDto.getComponents().stream().map(ComponentsDto::getKey)
         .collect(Collectors.toList());
     var nestedComponentKeys = formDto.getComponents().stream()

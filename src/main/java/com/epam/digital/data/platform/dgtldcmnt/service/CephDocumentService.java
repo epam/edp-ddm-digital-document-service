@@ -16,18 +16,16 @@
 
 package com.epam.digital.data.platform.dgtldcmnt.service;
 
-import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.epam.digital.data.platform.dgtldcmnt.dto.DocumentDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.DocumentIdDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.DocumentMetadataDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.GetDocumentDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.GetDocumentsMetadataDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentDto;
-import com.epam.digital.data.platform.dgtldcmnt.exception.DocumentNotFoundException;
-import com.epam.digital.data.platform.dgtldcmnt.util.CephKeyProvider;
-import com.epam.digital.data.platform.integration.ceph.UserMetadataHeaders;
-import com.epam.digital.data.platform.integration.ceph.service.S3ObjectCephService;
 import com.epam.digital.data.platform.starter.logger.annotation.Confidential;
+import com.epam.digital.data.platform.storage.file.dto.FileDataDto;
+import com.epam.digital.data.platform.storage.file.dto.FileMetadataDto;
+import com.epam.digital.data.platform.storage.file.service.FromDataFileStorageService;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -53,8 +51,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 @RequiredArgsConstructor
 public class CephDocumentService implements DocumentService {
 
-  private final S3ObjectCephService s3ObjectCephService;
-  private final CephKeyProvider keyProvider;
+  private final FromDataFileStorageService storage;
 
   @Override
   public DocumentMetadataDto put(UploadDocumentDto uploadDocumentDto) {
@@ -64,22 +61,16 @@ public class CephDocumentService implements DocumentService {
         uploadDocumentDto.getTaskId());
     byte[] data = readBytes(uploadDocumentDto.getFileInputStream());
     var sha256hex = DigestUtils.sha256Hex(data);
-    var userMetadata = Map.of(
-        UserMetadataHeaders.ID, id,
-        UserMetadataHeaders.CHECKSUM, sha256hex,
-        UserMetadataHeaders.FILENAME, encodeUtf8(uploadDocumentDto.getFilename())
-    );
-    var key = keyProvider.generateKey(id, uploadDocumentDto.getProcessInstanceId());
-    var objectMetadata = s3ObjectCephService
-        .put(key, uploadDocumentDto.getContentType(), userMetadata, new ByteArrayInputStream(data));
-    var url = generateGetDocumentUrl(uploadDocumentDto.getOriginRequestUrl(),
-        uploadDocumentDto.getProcessInstanceId(), uploadDocumentDto.getTaskId(),
-        uploadDocumentDto.getFieldName(), id);
+    var fileMetadata = buildFileMetadata(id, sha256hex, uploadDocumentDto);
+    var fileDataDto = FileDataDto.builder().content(new ByteArrayInputStream(data))
+        .metadata(fileMetadata).build();
+    var savedFileMetadata = storage.save(uploadDocumentDto.getProcessInstanceId(), id, fileDataDto);
+    var url = generateGetDocumentUrl(id, uploadDocumentDto);
     log.debug("File {} uploaded. Id {}", uploadDocumentDto.getFilename(), id);
     return DocumentMetadataDto.builder()
-        .size(objectMetadata.getContentLength())
+        .size(savedFileMetadata.getContentLength())
         .name(uploadDocumentDto.getFilename())
-        .type(objectMetadata.getContentType())
+        .type(savedFileMetadata.getContentType())
         .checksum(sha256hex)
         .url(url)
         .id(id)
@@ -90,17 +81,14 @@ public class CephDocumentService implements DocumentService {
   @Confidential
   public DocumentDto get(GetDocumentDto getDocumentDto) {
     log.debug("Getting document with id {}", getDocumentDto.getId());
-    var key = keyProvider
-        .generateKey(getDocumentDto.getId(), getDocumentDto.getProcessInstanceId());
-    var s3Object = s3ObjectCephService.get(key)
-        .orElseThrow(() -> new DocumentNotFoundException(List.of(getDocumentDto.getId())));
+    var fileData = storage.loadByProcessInstanceIdAndId(getDocumentDto.getProcessInstanceId(),
+        getDocumentDto.getId());
     log.debug("File downloaded. Id {}", getDocumentDto.getId());
     return DocumentDto.builder()
-        .name(decodeUtf8(
-            s3Object.getObjectMetadata().getUserMetaDataOf(UserMetadataHeaders.FILENAME)))
-        .contentType(s3Object.getObjectMetadata().getContentType())
-        .size(s3Object.getObjectMetadata().getContentLength())
-        .content(s3Object.getObjectContent())
+        .name(decodeUtf8(fileData.getMetadata().getFilename()))
+        .contentType(fileData.getMetadata().getContentType())
+        .size(fileData.getMetadata().getContentLength())
+        .content(fileData.getContent())
         .build();
   }
 
@@ -109,32 +97,27 @@ public class CephDocumentService implements DocumentService {
     log.debug("Getting documents metadata by ids {}", getMetadataDto.getDocuments());
     var documentIdAndFiledNameMap = getMetadataDto.getDocuments().stream()
         .collect(Collectors.toMap(DocumentIdDto::getId, DocumentIdDto::getFieldName));
-    var ids = documentIdAndFiledNameMap.keySet().stream()
-        .map(id -> keyProvider.generateKey(id, getMetadataDto.getProcessInstanceId()))
+    var result = storage.getMetadata(getMetadataDto.getProcessInstanceId(),
+            documentIdAndFiledNameMap.keySet()).stream()
+        .map(objectMetadata -> map(objectMetadata, getMetadataDto, documentIdAndFiledNameMap))
         .collect(Collectors.toList());
-    var result = s3ObjectCephService.getMetadata(ids)
-        .map(metadataList -> metadataList.stream()
-            .map(objectMetadata -> map(objectMetadata, getMetadataDto, documentIdAndFiledNameMap))
-            .collect(Collectors.toList())
-        ).orElseThrow(() -> new DocumentNotFoundException(documentIdAndFiledNameMap.keySet()));
     log.debug("Documents metadata by ids {} received", getMetadataDto.getDocuments());
     return result;
   }
 
-  private DocumentMetadataDto map(ObjectMetadata objectMetadata,
+  private DocumentMetadataDto map(FileMetadataDto fileMetadataDto,
       GetDocumentsMetadataDto getMetadataDto, Map<String, String> documentIdAndFiledNameMap) {
-    var id = objectMetadata.getUserMetaDataOf(UserMetadataHeaders.ID);
+    var id = fileMetadataDto.getId();
     var url = generateGetDocumentUrl(getMetadataDto.getOriginRequestUrl(),
         getMetadataDto.getProcessInstanceId(), getMetadataDto.getTaskId(),
-        documentIdAndFiledNameMap.get(id),
-        objectMetadata.getUserMetaDataOf(UserMetadataHeaders.ID));
+        documentIdAndFiledNameMap.get(id), id);
     return DocumentMetadataDto.builder()
+        .name(decodeUtf8(fileMetadataDto.getFilename()))
+        .size(fileMetadataDto.getContentLength())
+        .checksum(fileMetadataDto.getChecksum())
+        .type(fileMetadataDto.getContentType())
         .url(url)
-        .name(decodeUtf8(objectMetadata.getUserMetaDataOf(UserMetadataHeaders.FILENAME)))
-        .checksum(objectMetadata.getUserMetaDataOf(UserMetadataHeaders.CHECKSUM))
-        .id(objectMetadata.getUserMetaDataOf(UserMetadataHeaders.ID))
-        .size(objectMetadata.getContentLength())
-        .type(objectMetadata.getContentType())
+        .id(id)
         .build();
   }
 
@@ -146,6 +129,12 @@ public class CephDocumentService implements DocumentService {
         .pathSegment(fieldName)
         .pathSegment(id)
         .toUriString();
+  }
+
+  private String generateGetDocumentUrl(String fileId, UploadDocumentDto uploadDocumentDto) {
+    return this.generateGetDocumentUrl(uploadDocumentDto.getOriginRequestUrl(),
+        uploadDocumentDto.getProcessInstanceId(), uploadDocumentDto.getTaskId(),
+        uploadDocumentDto.getFieldName(), fileId);
   }
 
   private byte[] readBytes(InputStream inputStream) {
@@ -170,5 +159,15 @@ public class CephDocumentService implements DocumentService {
     } catch (UnsupportedEncodingException e) {
       throw new IllegalArgumentException("Unable to decode value", e);
     }
+  }
+
+  private FileMetadataDto buildFileMetadata(String id, String checksum,
+      UploadDocumentDto uploadDocumentDto) {
+    return FileMetadataDto.builder()
+        .filename(encodeUtf8(uploadDocumentDto.getFilename()))
+        .contentType(uploadDocumentDto.getContentType())
+        .checksum(checksum)
+        .id(id)
+        .build();
   }
 }
