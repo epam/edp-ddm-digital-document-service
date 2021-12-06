@@ -18,27 +18,23 @@ package com.epam.digital.data.platform.dgtldcmnt.service;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.Assert.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.S3Object;
 import com.epam.digital.data.platform.dgtldcmnt.dto.DocumentDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.DocumentIdDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.GetDocumentDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.GetDocumentsMetadataDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentDto;
-import com.epam.digital.data.platform.dgtldcmnt.exception.DocumentNotFoundException;
-import com.epam.digital.data.platform.dgtldcmnt.util.CephKeyProvider;
-import com.epam.digital.data.platform.integration.ceph.UserMetadataHeaders;
-import com.epam.digital.data.platform.integration.ceph.service.S3ObjectCephService;
+import com.epam.digital.data.platform.storage.file.dto.FileDataDto;
+import com.epam.digital.data.platform.storage.file.dto.FileMetadataDto;
+import com.epam.digital.data.platform.storage.file.exception.FileNotFoundException;
+import com.epam.digital.data.platform.storage.file.service.FromDataFileStorageService;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -51,7 +47,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class CephDocumentServiceTest {
 
   @Mock
-  private S3ObjectCephService s3ObjectCephService;
+  private FromDataFileStorageService fromDataFileStorageService;
 
   private DocumentService service;
 
@@ -65,19 +61,18 @@ public class CephDocumentServiceTest {
   private final Long contentLength = 1000L;
   private final byte[] data = new byte[]{1};
 
-  private CephKeyProvider keyProvider = new CephKeyProvider();
-
   @Before
   public void init() {
-    service = new CephDocumentService(s3ObjectCephService, keyProvider);
+    service = new CephDocumentService(fromDataFileStorageService);
   }
 
   @Test
   public void testPutDocument() {
     var is = new ByteArrayInputStream(data);
-    var testObjectMetaData = new ObjectMetadata();
-    testObjectMetaData.setContentType(contentType);
-    testObjectMetaData.setContentLength(contentLength);
+    var testObjectMetaData = FileMetadataDto.builder()
+        .contentLength(contentLength)
+        .contentType(contentType)
+        .build();
     var uploadDto = UploadDocumentDto.builder()
         .processInstanceId(processInstanceId)
         .originRequestUrl(originRequestUrl)
@@ -88,10 +83,9 @@ public class CephDocumentServiceTest {
         .taskId(taskId)
         .build();
 
-    ArgumentCaptor<Map<String, String>> captor = ArgumentCaptor.forClass(Map.class);
-    when(s3ObjectCephService
-        .put(any(String.class), eq(contentType), captor.capture(), any(InputStream.class)))
-        .thenReturn(testObjectMetaData);
+    ArgumentCaptor<FileDataDto> captor = ArgumentCaptor.forClass(FileDataDto.class);
+    when(fromDataFileStorageService.save(eq(processInstanceId), anyString(),
+        captor.capture())).thenReturn(testObjectMetaData);
 
     var savedDocMetadata = service.put(uploadDto);
 
@@ -99,41 +93,42 @@ public class CephDocumentServiceTest {
     assertThat(savedDocMetadata.getType()).isEqualTo(contentType);
     assertThat(savedDocMetadata.getSize()).isEqualTo(contentLength);
     assertThat(savedDocMetadata.getName()).isEqualTo(filename);
-    Map<String, String> userMetadata = captor.getValue();
-    assertThat(userMetadata.get(UserMetadataHeaders.ID)).isNotEmpty();
-    assertThat(userMetadata.get(UserMetadataHeaders.CHECKSUM)).isNotEmpty();
-    assertThat(userMetadata.get(UserMetadataHeaders.FILENAME)).isEqualTo(filename);
-    assertThat(savedDocMetadata.getChecksum())
-        .isEqualTo(userMetadata.get(UserMetadataHeaders.CHECKSUM));
-    assertThat(savedDocMetadata.getId()).isEqualTo(userMetadata.get(UserMetadataHeaders.ID));
-    assertThat(savedDocMetadata.getUrl()).contains(userMetadata.get(UserMetadataHeaders.ID));
+    FileMetadataDto userMetadata = captor.getValue().getMetadata();
+    assertThat(userMetadata.getId()).isNotEmpty();
+    assertThat(userMetadata.getChecksum()).isNotEmpty();
+    assertThat(userMetadata.getFilename()).isEqualTo(filename);
+    assertThat(savedDocMetadata.getChecksum()).isEqualTo(userMetadata.getChecksum());
+    assertThat(savedDocMetadata.getId()).isEqualTo(userMetadata.getId());
+    assertThat(savedDocMetadata.getUrl()).contains(userMetadata.getId());
     var expectedUrl = UriComponentsBuilder.newInstance().scheme("https").host(originRequestUrl)
         .pathSegment("documents")
         .pathSegment(processInstanceId)
         .pathSegment(taskId)
         .pathSegment(fieldName)
-        .pathSegment(userMetadata.get(UserMetadataHeaders.ID))
+        .pathSegment(userMetadata.getId())
         .toUriString();
     assertThat(savedDocMetadata.getUrl()).isEqualTo(expectedUrl);
   }
 
   @Test
   public void testGetDocument() throws IOException {
-    var id = keyProvider.generateKey(key, processInstanceId);
-    var s3Object = new S3Object();
-    s3Object.setKey(id);
-    s3Object.setObjectContent(new ByteArrayInputStream(data));
-    var objectMetadata = new ObjectMetadata();
-    objectMetadata.setContentLength(contentLength);
-    objectMetadata.setContentType(contentType);
-    objectMetadata.setUserMetadata(Map.of(UserMetadataHeaders.FILENAME, filename));
-    s3Object.setObjectMetadata(objectMetadata);
     var getDocumentDto = GetDocumentDto.builder()
         .processInstanceId(processInstanceId)
         .id(key)
         .build();
+    var metadataDto = FileMetadataDto.builder()
+        .contentLength(contentLength)
+        .contentType(contentType)
+        .filename(filename)
+        .build();
+    var fileDataDto = FileDataDto.builder()
+        .content(new ByteArrayInputStream(data))
+        .metadata(metadataDto)
+        .build();
 
-    when(s3ObjectCephService.get(id)).thenReturn(Optional.of(s3Object));
+    when(
+        fromDataFileStorageService.loadByProcessInstanceIdAndId(processInstanceId, key)).thenReturn(
+        fileDataDto);
 
     DocumentDto documentDto = service.get(getDocumentDto);
 
@@ -146,22 +141,21 @@ public class CephDocumentServiceTest {
 
   @Test
   public void testGetDocumentThatNotFound() {
-    when(s3ObjectCephService.get(keyProvider.generateKey(key, processInstanceId)))
-        .thenReturn(Optional.empty());
+    when(fromDataFileStorageService.loadByProcessInstanceIdAndId(processInstanceId, key))
+        .thenThrow(FileNotFoundException.class);
 
-    var exception = assertThrows(DocumentNotFoundException.class,
+    assertThrows(FileNotFoundException.class,
         () -> service
             .get(GetDocumentDto.builder().processInstanceId(processInstanceId).id(key).build()));
-
-    assertThat(exception.getIds().iterator().next()).isEqualTo(key);
   }
 
   @Test
   public void testGetMetadata() {
-    var objectMetadata = new ObjectMetadata();
-    objectMetadata.setContentLength(contentLength);
-    objectMetadata.setContentType(contentType);
-    objectMetadata.setUserMetadata(Map.of(UserMetadataHeaders.FILENAME, "test.pdf"));
+    var fileMetadata = FileMetadataDto.builder()
+        .contentLength(contentLength)
+        .contentType(contentType)
+        .filename("test.pdf")
+        .build();
     var getMetadataDto = GetDocumentsMetadataDto.builder()
         .documents(List.of(DocumentIdDto.builder().id(key).fieldName(fieldName).build()))
         .processInstanceId(processInstanceId)
@@ -169,8 +163,8 @@ public class CephDocumentServiceTest {
         .taskId(taskId)
         .build();
 
-    when(s3ObjectCephService.getMetadata(List.of(keyProvider.generateKey(key, processInstanceId))))
-        .thenReturn(Optional.of(List.of(objectMetadata)));
+    when(fromDataFileStorageService.getMetadata(processInstanceId, Set.of(key))).thenReturn(
+        List.of(fileMetadata));
 
     var metadata = service.getMetadata(getMetadataDto);
     assertThat(metadata.size()).isOne();
@@ -186,12 +180,9 @@ public class CephDocumentServiceTest {
         .originRequestUrl(originRequestUrl)
         .taskId(taskId)
         .build();
-    when(s3ObjectCephService.getMetadata(List.of(keyProvider.generateKey(key, processInstanceId))))
-        .thenReturn(Optional.empty());
+    when(fromDataFileStorageService.getMetadata(processInstanceId, Set.of(key))).thenThrow(
+        FileNotFoundException.class);
 
-    var exception = assertThrows(DocumentNotFoundException.class,
-        () -> service.getMetadata(getMetadataDto));
-
-    assertThat(exception.getIds().iterator().next()).isEqualTo(key);
+    assertThrows(FileNotFoundException.class, () -> service.getMetadata(getMetadataDto));
   }
 }

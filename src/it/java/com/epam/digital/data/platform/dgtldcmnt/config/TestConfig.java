@@ -17,10 +17,15 @@
 package com.epam.digital.data.platform.dgtldcmnt.config;
 
 import com.epam.digital.data.platform.dgtldcmnt.BaseIT;
-import com.epam.digital.data.platform.integration.ceph.service.S3ObjectCephService;
+import com.epam.digital.data.platform.integration.ceph.service.CephService;
+import com.epam.digital.data.platform.storage.file.repository.CephFormDataFileRepository;
+import com.epam.digital.data.platform.storage.file.repository.FormDataFileRepository;
+import com.epam.digital.data.platform.storage.file.service.FormDataFileKeyProviderImpl;
+import com.epam.digital.data.platform.storage.file.service.FromDataFileStorageService;
 import com.google.common.io.ByteStreams;
 import java.util.Objects;
 import lombok.SneakyThrows;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -29,9 +34,27 @@ import org.springframework.context.annotation.Primary;
 public class TestConfig {
 
   @Bean
-  @Primary
-  public S3ObjectCephService s3ObjectCephService() {
+  public CephService s3ObjectCephService() {
     return new TestS3ObjectCephService();
+  }
+
+  @Bean
+  public FormDataFileRepository formDataFileRepository(
+      @Value("${ceph.bucket}") String bucket) {
+    return CephFormDataFileRepository.builder()
+        .cephService(s3ObjectCephService())
+        .cephBucketName(bucket)
+        .build();
+  }
+
+  @Bean
+  @Primary
+  public FromDataFileStorageService fromDataFileStorageService(
+      FormDataFileRepository formDataFileRepository) {
+    return FromDataFileStorageService.builder()
+        .keyProvider(new FormDataFileKeyProviderImpl())
+        .repository(formDataFileRepository)
+        .build();
   }
 
   @Bean
