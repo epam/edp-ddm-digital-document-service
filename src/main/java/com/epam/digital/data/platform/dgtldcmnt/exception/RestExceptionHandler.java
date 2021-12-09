@@ -18,7 +18,7 @@ package com.epam.digital.data.platform.dgtldcmnt.exception;
 
 import com.epam.digital.data.platform.starter.errorhandling.BaseRestExceptionHandler;
 import com.epam.digital.data.platform.starter.errorhandling.dto.SystemErrorDto;
-import java.io.FileNotFoundException;
+import com.epam.digital.data.platform.storage.file.exception.FileNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
