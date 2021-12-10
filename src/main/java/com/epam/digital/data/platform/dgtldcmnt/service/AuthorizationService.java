@@ -16,6 +16,7 @@
 
 package com.epam.digital.data.platform.dgtldcmnt.service;
 
+import com.epam.digital.data.platform.bpms.api.dto.DdmSignableTaskDto;
 import com.epam.digital.data.platform.starter.validation.dto.ComponentsDto;
 import com.epam.digital.data.platform.starter.validation.dto.FormDto;
 import com.epam.digital.data.platform.starter.validation.dto.NestedComponentDto;
@@ -25,7 +26,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.camunda.bpm.engine.rest.dto.task.TaskDto;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
@@ -62,8 +62,8 @@ public class AuthorizationService {
    * @param authentication    object with authentication data.
    * @throws AccessDeniedException when user does not have permission or access to the documents.
    */
-  public void authorize(String processInstanceId, List<String> fieldNames, TaskDto taskDto,
-      FormDto formDto, Authentication authentication) {
+  public void authorize(String processInstanceId, List<String> fieldNames,
+      DdmSignableTaskDto taskDto, FormDto formDto, Authentication authentication) {
     log.debug("Starting authorization for files {} for task {} in process {}", fieldNames,
         taskDto.getId(), processInstanceId);
     checkTaskExistenceInProcessInstance(processInstanceId, taskDto);
@@ -73,7 +73,8 @@ public class AuthorizationService {
     log.debug("Files {} for task {} have been authorized for user", fieldNames, taskDto.getId());
   }
 
-  private void checkTaskExistenceInProcessInstance(String processInstanceId, TaskDto taskDto) {
+  private void checkTaskExistenceInProcessInstance(String processInstanceId,
+      DdmSignableTaskDto taskDto) {
     if (!taskDto.getProcessInstanceId().equals(processInstanceId)) {
       throw new AccessDeniedException(String.format(TASK_NOT_FOUND_IN_PROCESS_INSTANCE_MSG,
           taskDto.getId(), processInstanceId));
@@ -81,14 +82,14 @@ public class AuthorizationService {
     log.trace("Task's {} process instance was verified ({})", taskDto.getId(), processInstanceId);
   }
 
-  private void checkTaskStatus(TaskDto taskDto) {
+  private void checkTaskStatus(DdmSignableTaskDto taskDto) {
     if (taskDto.isSuspended()) {
       throw new AccessDeniedException(String.format(TASK_IS_SUSPENDED_MSG, taskDto.getId()));
     }
     log.trace("Verified that task {} isn't suspended", taskDto.getId());
   }
 
-  private void checkTaskAssignee(TaskDto taskDto, Authentication authentication) {
+  private void checkTaskAssignee(DdmSignableTaskDto taskDto, Authentication authentication) {
     if (!authentication.getName().equals(taskDto.getAssignee())) {
       throw new AccessDeniedException(
           String.format(CURRENT_USER_IS_NOT_ASSIGNED_MSG, taskDto.getId()));

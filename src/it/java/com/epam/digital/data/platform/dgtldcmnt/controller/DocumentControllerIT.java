@@ -23,11 +23,11 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.epam.digital.data.platform.bpms.api.dto.DdmSignableTaskDto;
 import com.epam.digital.data.platform.dgtldcmnt.BaseIT;
 import com.epam.digital.data.platform.dgtldcmnt.dto.DocumentIdDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.DocumentMetadataDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.DocumentMetadataSearchRequestDto;
-import com.epam.digital.data.platform.dgtldcmnt.dto.TestTaskDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentDto;
 import com.epam.digital.data.platform.starter.security.jwt.JwtAuthenticationFilter;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -37,7 +37,6 @@ import java.util.List;
 import java.util.Objects;
 import lombok.SneakyThrows;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.camunda.bpm.engine.rest.dto.task.TaskDto;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.http.MediaType;
@@ -219,14 +218,13 @@ public class DocumentControllerIT extends BaseIT {
   @SneakyThrows
   private void mockBpmsGetTaskById(String taskId, String assignee, String processInstanceId,
       String formKey) {
-    var task = new TestTaskDto();
-    task.setFormKey(formKey);
-    task.setId(taskId);
-    task.setAssignee(assignee);
-    task.setProcessInstanceId(processInstanceId);
-    TaskDto taskById = TaskDto.fromEntity(task);
+    var taskById = new DdmSignableTaskDto();
+    taskById.setFormKey(formKey);
+    taskById.setId(taskId);
+    taskById.setAssignee(assignee);
+    taskById.setProcessInstanceId(processInstanceId);
     bpmServer.addStubMapping(
-        stubFor(WireMock.get(urlPathEqualTo("/api/task/" + taskId))
+        stubFor(WireMock.get(urlPathEqualTo("/api/extended/task/" + taskId))
             .willReturn(aResponse()
                 .withHeader("Content-Type", "application/json")
                 .withStatus(200)

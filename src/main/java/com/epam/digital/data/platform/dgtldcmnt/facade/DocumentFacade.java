@@ -16,7 +16,7 @@
 
 package com.epam.digital.data.platform.dgtldcmnt.facade;
 
-import com.epam.digital.data.platform.bpms.client.CamundaTaskRestClient;
+import com.epam.digital.data.platform.bpms.client.TaskRestClient;
 import com.epam.digital.data.platform.dgtldcmnt.dto.DocumentDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.DocumentIdDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.DocumentMetadataDto;
@@ -45,7 +45,7 @@ public class DocumentFacade {
   private final DocumentService documentService;
   private final AuthorizationService authorizationService;
   private final ValidationService validationService;
-  private final CamundaTaskRestClient taskRestClient;
+  private final TaskRestClient taskRestClient;
   private final FormManagementProviderClient formProviderClient;
 
   /**
