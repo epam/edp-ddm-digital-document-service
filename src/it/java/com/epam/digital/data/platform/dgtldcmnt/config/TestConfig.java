@@ -21,7 +21,7 @@ import com.epam.digital.data.platform.integration.ceph.service.CephService;
 import com.epam.digital.data.platform.storage.file.repository.CephFormDataFileRepository;
 import com.epam.digital.data.platform.storage.file.repository.FormDataFileRepository;
 import com.epam.digital.data.platform.storage.file.service.FormDataFileKeyProviderImpl;
-import com.epam.digital.data.platform.storage.file.service.FromDataFileStorageService;
+import com.epam.digital.data.platform.storage.file.service.FormDataFileStorageService;
 import com.google.common.io.ByteStreams;
 import java.util.Objects;
 import lombok.SneakyThrows;
@@ -49,9 +49,9 @@ public class TestConfig {
 
   @Bean
   @Primary
-  public FromDataFileStorageService fromDataFileStorageService(
+  public FormDataFileStorageService fromDataFileStorageService(
       FormDataFileRepository formDataFileRepository) {
-    return FromDataFileStorageService.builder()
+    return FormDataFileStorageService.builder()
         .keyProvider(new FormDataFileKeyProviderImpl())
         .repository(formDataFileRepository)
         .build();

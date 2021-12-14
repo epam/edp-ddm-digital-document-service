@@ -25,7 +25,7 @@ import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentDto;
 import com.epam.digital.data.platform.starter.logger.annotation.Confidential;
 import com.epam.digital.data.platform.storage.file.dto.FileDataDto;
 import com.epam.digital.data.platform.storage.file.dto.FileMetadataDto;
-import com.epam.digital.data.platform.storage.file.service.FromDataFileStorageService;
+import com.epam.digital.data.platform.storage.file.service.FormDataFileStorageService;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -51,7 +51,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 @RequiredArgsConstructor
 public class CephDocumentService implements DocumentService {
 
-  private final FromDataFileStorageService storage;
+  private final FormDataFileStorageService storage;
 
   @Override
   public DocumentMetadataDto put(UploadDocumentDto uploadDocumentDto) {
