@@ -30,7 +30,7 @@ import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentDto;
 import com.epam.digital.data.platform.storage.file.dto.FileDataDto;
 import com.epam.digital.data.platform.storage.file.dto.FileMetadataDto;
 import com.epam.digital.data.platform.storage.file.exception.FileNotFoundException;
-import com.epam.digital.data.platform.storage.file.service.FromDataFileStorageService;
+import com.epam.digital.data.platform.storage.file.service.FormDataFileStorageService;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.List;
@@ -47,7 +47,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class CephDocumentServiceTest {
 
   @Mock
-  private FromDataFileStorageService fromDataFileStorageService;
+  private FormDataFileStorageService fromDataFileStorageService;
 
   private DocumentService service;
 

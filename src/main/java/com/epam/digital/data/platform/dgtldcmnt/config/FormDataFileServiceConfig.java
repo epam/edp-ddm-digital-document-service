@@ -2,7 +2,7 @@ package com.epam.digital.data.platform.dgtldcmnt.config;
 
 import com.epam.digital.data.platform.storage.base.config.CephStorageConfiguration;
 import com.epam.digital.data.platform.storage.base.factory.StorageServiceFactory;
-import com.epam.digital.data.platform.storage.file.service.FromDataFileStorageService;
+import com.epam.digital.data.platform.storage.file.service.FormDataFileStorageService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -26,7 +26,7 @@ public class FormDataFileServiceConfig {
   }
 
   @Bean
-  public FromDataFileStorageService formDataStorageService(StorageServiceFactory factory,
+  public FormDataFileStorageService formDataStorageService(StorageServiceFactory factory,
       CephStorageConfiguration config) {
     return factory.fromDataFileStorageService(config);
   }
