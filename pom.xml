@@ -17,7 +17,7 @@
   <description>Digital document service</description>
 
   <properties>
-    <ddm-form-data-storage.version>1.5.1-SNAPSHOT</ddm-form-data-storage.version>
+    <ddm-form-data-storage.version>1.5.2-SNAPSHOT</ddm-form-data-storage.version>
     <ddm-starter-security.version>1.5.0-SNAPSHOT</ddm-starter-security.version>
     <ddm-starter-actuator.version>1.4.0</ddm-starter-actuator.version>
     <ddm-starter-logger.version>1.5.0-SNAPSHOT</ddm-starter-logger.version>
