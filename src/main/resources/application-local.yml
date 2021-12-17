@@ -8,6 +8,13 @@ ceph:
   secret-key: secret-key
   bucket: bucket-name
 
+s3:
+  config:
+    client:
+      protocol: http
+    options:
+      pathStyleAccess: true
+
 bpms:
   url: http://localhost:8100
 form-management-provider:

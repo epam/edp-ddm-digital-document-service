@@ -14,6 +14,13 @@ ceph:
   bucketName: lowcode-file-storage
   host: ${CEPH_BUCKET_HOST}
 
+s3:
+  config:
+    client:
+      protocol: http
+    options:
+      pathStyleAccess: true
+
 appConfigMountPath: "/app/config"
 cephSecretMountPath: "/app/secrets/ceph"
 readinessPath: "/actuator/health/readiness"
