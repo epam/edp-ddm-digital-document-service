@@ -37,8 +37,8 @@ import java.util.List;
 import java.util.Objects;
 import lombok.SneakyThrows;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -55,7 +55,7 @@ public class DocumentControllerIT extends BaseIT {
   private final byte[] data = new byte[]{1};
   private String assignee;
 
-  @Before
+  @BeforeEach
   public void init() {
     assignee = tokenParser.parseClaims(accessToken).getPreferredUsername();
     mockBpmsGetTaskById(taskId, assignee, processInstanceId, formKey);

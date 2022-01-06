@@ -17,7 +17,7 @@
 package com.epam.digital.data.platform.dgtldcmnt.service;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -35,15 +35,16 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.util.UriComponentsBuilder;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class CephDocumentServiceTest {
 
   @Mock
@@ -61,7 +62,7 @@ public class CephDocumentServiceTest {
   private final Long contentLength = 1000L;
   private final byte[] data = new byte[]{1};
 
-  @Before
+  @BeforeEach
   public void init() {
     service = new CephDocumentService(fromDataFileStorageService);
   }
