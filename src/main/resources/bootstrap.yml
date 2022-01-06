@@ -15,7 +15,9 @@ logging:
   config: classpath:log4j2-json-console.xml # stdout log streaming for fluentd
 ---
 spring:
-  profiles: local
+  config:
+    activate:
+      on-profile: local
   cloud:
     kubernetes:
       config:

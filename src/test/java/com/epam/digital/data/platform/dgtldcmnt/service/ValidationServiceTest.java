@@ -22,19 +22,19 @@ import static com.epam.digital.data.platform.dgtldcmnt.service.ValidationService
 import static com.epam.digital.data.platform.dgtldcmnt.service.ValidationService.FILE_TYPE_IS_NOT_SUPPORTED_MSG;
 import static com.epam.digital.data.platform.dgtldcmnt.service.ValidationService.UNSUPPORTED_FILE_SIZE_DEFINITION_MSG;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentDto;
 import com.epam.digital.data.platform.starter.errorhandling.exception.ValidationException;
 import com.epam.digital.data.platform.starter.validation.dto.ComponentsDto;
 import com.epam.digital.data.platform.starter.validation.dto.FormDto;
 import java.util.List;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class ValidationServiceTest {
 
   private final String taskId = "testTaskId";
@@ -48,7 +48,7 @@ public class ValidationServiceTest {
 
   private FormDto formDto;
 
-  @Before
+  @BeforeEach
   public void init() {
     var componentsDtos = List
         .of(new ComponentsDto(fieldName, "file", null, null, filePattern, fileMaxSize, null));

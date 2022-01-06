@@ -21,8 +21,8 @@ import static com.epam.digital.data.platform.dgtldcmnt.service.AuthorizationServ
 import static com.epam.digital.data.platform.dgtldcmnt.service.AuthorizationService.TASK_IS_SUSPENDED_MSG;
 import static com.epam.digital.data.platform.dgtldcmnt.service.AuthorizationService.TASK_NOT_FOUND_IN_PROCESS_INSTANCE_MSG;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.epam.digital.data.platform.bpms.api.dto.DdmSignableTaskDto;
 import com.epam.digital.data.platform.starter.validation.dto.ComponentsDto;
@@ -30,16 +30,16 @@ import com.epam.digital.data.platform.starter.validation.dto.FormDto;
 import com.epam.digital.data.platform.starter.validation.dto.NestedComponentDto;
 import java.util.ArrayList;
 import java.util.List;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.User;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class AuthorizationServiceTest {
 
   private AuthorizationService authorizationService;
@@ -54,7 +54,7 @@ public class AuthorizationServiceTest {
   private FormDto formDto;
   private Authentication authentication;
 
-  @Before
+  @BeforeEach
   public void init() {
     authorizationService = new AuthorizationService();
     taskDto = new DdmSignableTaskDto();
