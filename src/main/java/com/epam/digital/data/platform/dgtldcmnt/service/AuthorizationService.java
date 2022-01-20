@@ -17,9 +17,9 @@
 package com.epam.digital.data.platform.dgtldcmnt.service;
 
 import com.epam.digital.data.platform.bpms.api.dto.DdmSignableTaskDto;
-import com.epam.digital.data.platform.starter.validation.dto.ComponentsDto;
-import com.epam.digital.data.platform.starter.validation.dto.FormDto;
-import com.epam.digital.data.platform.starter.validation.dto.NestedComponentDto;
+import com.epam.digital.data.platform.integration.formprovider.dto.ComponentsDto;
+import com.epam.digital.data.platform.integration.formprovider.dto.FormDto;
+import com.epam.digital.data.platform.integration.formprovider.dto.NestedComponentDto;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
