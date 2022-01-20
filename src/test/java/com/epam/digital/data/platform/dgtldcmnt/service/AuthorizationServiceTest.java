@@ -25,9 +25,9 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.epam.digital.data.platform.bpms.api.dto.DdmSignableTaskDto;
-import com.epam.digital.data.platform.starter.validation.dto.ComponentsDto;
-import com.epam.digital.data.platform.starter.validation.dto.FormDto;
-import com.epam.digital.data.platform.starter.validation.dto.NestedComponentDto;
+import com.epam.digital.data.platform.integration.formprovider.dto.ComponentsDto;
+import com.epam.digital.data.platform.integration.formprovider.dto.FormDto;
+import com.epam.digital.data.platform.integration.formprovider.dto.NestedComponentDto;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;

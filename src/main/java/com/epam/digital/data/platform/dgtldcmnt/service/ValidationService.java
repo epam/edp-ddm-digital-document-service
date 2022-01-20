@@ -17,12 +17,12 @@
 package com.epam.digital.data.platform.dgtldcmnt.service;
 
 import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentDto;
+import com.epam.digital.data.platform.integration.formprovider.dto.ComponentsDto;
+import com.epam.digital.data.platform.integration.formprovider.dto.FormDto;
+import com.epam.digital.data.platform.integration.formprovider.dto.NestedComponentDto;
 import com.epam.digital.data.platform.starter.errorhandling.BaseRestExceptionHandler;
 import com.epam.digital.data.platform.starter.errorhandling.dto.ValidationErrorDto;
 import com.epam.digital.data.platform.starter.errorhandling.exception.ValidationException;
-import com.epam.digital.data.platform.starter.validation.dto.ComponentsDto;
-import com.epam.digital.data.platform.starter.validation.dto.FormDto;
-import com.epam.digital.data.platform.starter.validation.dto.NestedComponentDto;
 import com.epam.digital.data.platform.starter.validation.dto.enums.FileType;
 import java.util.Set;
 import java.util.function.Supplier;

@@ -26,7 +26,7 @@ import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentDto;
 import com.epam.digital.data.platform.dgtldcmnt.service.AuthorizationService;
 import com.epam.digital.data.platform.dgtldcmnt.service.DocumentService;
 import com.epam.digital.data.platform.dgtldcmnt.service.ValidationService;
-import com.epam.digital.data.platform.starter.validation.client.FormManagementProviderClient;
+import com.epam.digital.data.platform.integration.formprovider.client.FormManagementProviderClient;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;

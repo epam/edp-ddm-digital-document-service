@@ -25,9 +25,9 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentDto;
+import com.epam.digital.data.platform.integration.formprovider.dto.ComponentsDto;
+import com.epam.digital.data.platform.integration.formprovider.dto.FormDto;
 import com.epam.digital.data.platform.starter.errorhandling.exception.ValidationException;
-import com.epam.digital.data.platform.starter.validation.dto.ComponentsDto;
-import com.epam.digital.data.platform.starter.validation.dto.FormDto;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
