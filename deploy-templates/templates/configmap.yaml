@@ -14,3 +14,4 @@ data:
     {{- if eq .Values.deployProfile "dev" }}
     management.endpoints.web.exposure.include: '*'
     {{- end }}
+    platform.security.csrf.enabled: {{ .Values.platform.security.csrf.enabled }}
