@@ -97,7 +97,7 @@ public class TestS3ObjectCephService implements CephService {
 
   @Override
   public Set<String> getKeys(String cephBucketName, String prefix) {
-    return Collections.emptySet();
+    return storage.keySet().stream().filter(k -> k.startsWith(prefix)).collect(Collectors.toSet());
   }
 
   private List<CephObjectMetadata> toCephObjectMetadataList(

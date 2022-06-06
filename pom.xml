@@ -12,12 +12,11 @@
   </parent>
 
   <artifactId>digital-document-service</artifactId>
-  <version>1.6.0</version>
+  <version>1.7.0</version>
   <name>digital-document-service</name>
   <description>Digital document service</description>
 
   <properties>
-    <ddm-form-data-storage.version>1.6.0.1</ddm-form-data-storage.version>
     <ddm-starter-security.version>1.6.0.1</ddm-starter-security.version>
     <ddm-starter-actuator.version>1.6.0.1</ddm-starter-actuator.version>
     <ddm-starter-logger.version>1.6.0.1</ddm-starter-logger.version>
@@ -25,6 +24,7 @@
     <ddm-starter-error-handler.version>1.6.0.1</ddm-starter-error-handler.version>
     <ddm-starter-validation.version>1.6.0.1</ddm-starter-validation.version>
     <bpms-client.version>1.6.0.1</bpms-client.version>
+    <ddm-file-storage.version>1.7.0.1</ddm-file-storage.version>
 
     <apache.commons.io.version>2.6</apache.commons.io.version>
 
@@ -77,8 +77,8 @@
     </dependency>
     <dependency>
       <groupId>com.epam.digital.data.platform</groupId>
-      <artifactId>ddm-form-data-storage</artifactId>
-      <version>${ddm-form-data-storage.version}</version>
+      <artifactId>ddm-file-storage</artifactId>
+      <version>${ddm-file-storage.version}</version>
     </dependency>
     <dependency>
       <groupId>com.epam.digital.data.platform</groupId>

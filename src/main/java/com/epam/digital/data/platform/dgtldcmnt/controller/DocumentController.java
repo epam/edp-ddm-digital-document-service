@@ -39,6 +39,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -156,5 +157,17 @@ public class DocumentController {
         .taskId(taskId)
         .build();
     return documentFacade.getMetadata(getDocumentsMetadataDto, authentication);
+  }
+
+  /**
+   * Endpoint that deletes all documents associated with specified process instance id. The endpoint
+   * should be allowed only in internal network for system needs only as cleaning temporary
+   * data.
+   *
+   * @param processInstanceId specified process instance id
+   */
+  @DeleteMapping("/{processInstanceId}")
+  public void delete(@PathVariable("processInstanceId") String processInstanceId) {
+    documentFacade.delete(processInstanceId);
   }
 }
