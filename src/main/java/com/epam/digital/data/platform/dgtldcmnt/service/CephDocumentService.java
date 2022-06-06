@@ -105,6 +105,14 @@ public class CephDocumentService implements DocumentService {
     return result;
   }
 
+  @Override
+  public void delete(String processInstanceId) {
+    log.debug("Deleting all documents associated with process instance id {}", processInstanceId);
+    storage.deleteByProcessInstanceId(processInstanceId);
+    log.debug("All documents associated with process instance id {} were deleted successfully",
+        processInstanceId);
+  }
+
   private DocumentMetadataDto map(FileMetadataDto fileMetadataDto,
       GetDocumentsMetadataDto getMetadataDto, Map<String, String> documentIdAndFiledNameMap) {
     var id = fileMetadataDto.getId();

@@ -58,4 +58,11 @@ public interface DocumentService {
    * @throws {@link FileNotFoundException} if at least one document not exist in provided ids list.
    */
   List<DocumentMetadataDto> getMetadata(GetDocumentsMetadataDto getMetadataDto);
+
+  /**
+   * Delete all documents associated with provided process instance id
+   *
+   * @param processInstanceId specified process instance id
+   */
+  void delete(String processInstanceId);
 }

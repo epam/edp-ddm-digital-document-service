@@ -20,6 +20,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -41,6 +42,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -184,6 +186,28 @@ public class DocumentControllerIT extends BaseIT {
     assertThat(response).isNotNull();
     assertThat(response.size()).isOne();
     assertThat(response.get(0).getName()).isEqualTo(filename);
+  }
+
+  @Test
+  public void shouldDeleteFiles() throws Exception {
+    var documentMetadataDto = uploadFile(filename, contentType, data, createDocumentContextDto());
+    var id = documentMetadataDto.getId();
+
+    var deleteUrl = UriComponentsBuilder.newInstance().pathSegment("documents")
+        .pathSegment(processInstanceId).toUriString();
+    var deleteReq = delete(deleteUrl);
+    deleteReq.header(JwtAuthenticationFilter.AUTHORIZATION_HEADER, accessToken);
+    mockMvc.perform(deleteReq).andExpect(status().isOk());
+
+    var uriBuilder = UriComponentsBuilder.newInstance().pathSegment("documents")
+        .pathSegment(processInstanceId)
+        .pathSegment(taskId)
+        .pathSegment(fieldName)
+        .pathSegment(id);
+    var request = get(uriBuilder.toUriString()).accept(MediaType.APPLICATION_JSON_VALUE);
+    request.header(JwtAuthenticationFilter.AUTHORIZATION_HEADER, accessToken);
+
+    mockMvc.perform(request).andExpect(status().is4xxClientError());
   }
 
   @SneakyThrows

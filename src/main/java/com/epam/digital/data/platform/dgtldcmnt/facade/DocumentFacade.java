@@ -121,6 +121,15 @@ public class DocumentFacade {
     return result;
   }
 
+  /**
+   * Delete all documents associated with provided process instance id
+   *
+   * @param processInstanceId specified process instance id
+   */
+  public void delete(String processInstanceId) {
+    documentService.delete(processInstanceId);
+  }
+
   private void authorize(String processInstance, String taskId, List<String> filedNames,
       Authentication authentication) {
     var task = taskRestClient.getTaskById(taskId);
