@@ -51,8 +51,8 @@ public abstract class BaseIT {
   @Qualifier("bpms")
   protected WireMockServer bpmServer;
   @Autowired
-  @Qualifier("form-provider")
-  protected WireMockServer formProviderServer;
+  @Qualifier("form-validation")
+  protected WireMockServer formValidationServer;
   @Autowired
   protected MockMvc mockMvc;
   @Autowired

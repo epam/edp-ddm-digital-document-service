@@ -42,7 +42,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -61,7 +60,8 @@ public class DocumentControllerIT extends BaseIT {
   public void init() {
     assignee = tokenParser.parseClaims(accessToken).getPreferredUsername();
     mockBpmsGetTaskById(taskId, assignee, processInstanceId, formKey);
-    mockFormProviderGetFormMetadata(formKey, "/json/testFormMetadata.json");
+    mockCheckFieldNames(formKey);
+    mockFormProviderGetFormMetadata(formKey, fieldName, "/json/testFormMetadata.json");
     mockBpmsGetProcessInstanceById(processInstanceId);
   }
 
@@ -87,8 +87,8 @@ public class DocumentControllerIT extends BaseIT {
 
   @Test
   public void shouldUploadDocumentWithEditGrid() {
-    mockFormProviderGetFormMetadata(formKey, "/json/formWithEditGridMetadata.json");
     var hygienistCertificateFile = "hygienistCertificateFile";
+    mockFormProviderGetFormMetadata(formKey, hygienistCertificateFile, "/json/formWithEditGridMetadata.json");
     var documentContextDto = createDocumentContextDto();
     documentContextDto.setFieldName(hygienistCertificateFile);
     var response = uploadFile(filename, contentType, data, documentContextDto);
@@ -170,6 +170,7 @@ public class DocumentControllerIT extends BaseIT {
     var filename = "кириллица.pdf";
     DocumentMetadataDto documentMetadataDto = uploadFile(filename, contentType, data,
         createDocumentContextDto());
+
     var id = documentMetadataDto.getId();
 
     var urlBuilder = UriComponentsBuilder.newInstance().pathSegment("documents")
@@ -267,14 +268,23 @@ public class DocumentControllerIT extends BaseIT {
   }
 
   @SneakyThrows
-  private void mockFormProviderGetFormMetadata(String formKey, String formMetadataPath) {
+  private void mockFormProviderGetFormMetadata(String formKey, String fieldName, String formMetadataPath) {
     var formMetadata = new String(ByteStreams.toByteArray(
         Objects.requireNonNull(BaseIT.class.getResourceAsStream(formMetadataPath))));
-    formProviderServer.addStubMapping(
-        stubFor(WireMock.get(urlPathEqualTo("/" + formKey))
+    formValidationServer.addStubMapping(
+        stubFor(WireMock.post(urlPathEqualTo(String.format("/api/form-submissions/%s/fields/%s/validate", formKey, fieldName)))
             .willReturn(aResponse()
                 .withHeader("Content-Type", "application/json")
                 .withStatus(200)
                 .withBody(formMetadata))));
+  }
+
+  @SneakyThrows
+  private void mockCheckFieldNames(String formKey) {
+    formValidationServer.addStubMapping(
+        stubFor(WireMock.post(urlPathEqualTo(String.format("/api/form-submissions/%s/fields/check", formKey)))
+            .willReturn(aResponse()
+                .withHeader("Content-Type", "application/json")
+                .withStatus(200))));
   }
 }

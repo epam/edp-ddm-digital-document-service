@@ -12,7 +12,7 @@
   </parent>
 
   <artifactId>digital-document-service</artifactId>
-  <version>1.7.0</version>
+  <version>1.8.0</version>
   <name>digital-document-service</name>
   <description>Digital document service</description>
 
@@ -22,7 +22,7 @@
     <ddm-starter-logger.version>1.6.0.1</ddm-starter-logger.version>
 	  <log4j.version>2.17.0</log4j.version>
     <ddm-starter-error-handler.version>1.6.0.1</ddm-starter-error-handler.version>
-    <ddm-starter-validation.version>1.6.0.1</ddm-starter-validation.version>
+    <ddm-starter-validation.version>1.6.0.3</ddm-starter-validation.version>
     <bpms-client.version>1.6.0.1</bpms-client.version>
     <ddm-file-storage.version>1.7.0.1</ddm-file-storage.version>
 

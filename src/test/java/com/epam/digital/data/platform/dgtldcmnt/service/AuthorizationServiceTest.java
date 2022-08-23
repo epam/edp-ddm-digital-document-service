@@ -17,7 +17,6 @@
 package com.epam.digital.data.platform.dgtldcmnt.service;
 
 import static com.epam.digital.data.platform.dgtldcmnt.service.AuthorizationService.CURRENT_USER_IS_NOT_ASSIGNED_MSG;
-import static com.epam.digital.data.platform.dgtldcmnt.service.AuthorizationService.FIELD_NAMES_NOT_FOUND_MSG;
 import static com.epam.digital.data.platform.dgtldcmnt.service.AuthorizationService.TASK_IS_SUSPENDED_MSG;
 import static com.epam.digital.data.platform.dgtldcmnt.service.AuthorizationService.TASK_NOT_FOUND_IN_PROCESS_INSTANCE_MSG;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -51,7 +50,6 @@ public class AuthorizationServiceTest {
   private final String assignee = "testAssignee";
 
   private DdmSignableTaskDto taskDto;
-  private FormDto formDto;
   private Authentication authentication;
 
   @BeforeEach
@@ -63,10 +61,6 @@ public class AuthorizationServiceTest {
     taskDto.setAssignee(assignee);
     taskDto.setProcessInstanceId(processInstanceId);
 
-    var componentsDtos = List
-        .of(new ComponentsDto("testUpload1", "file", null, null, "application/pdf", "50MB", null));
-    formDto = new FormDto(componentsDtos);
-
     var principal = new User(assignee, "", new ArrayList<>());
     authentication = new UsernamePasswordAuthenticationToken(principal, null, null);
   }
@@ -75,7 +69,7 @@ public class AuthorizationServiceTest {
   public void shouldAuthorize() {
     assertDoesNotThrow(
         () -> authorizationService
-            .authorize(processInstanceId, fieldNames, taskDto, formDto, authentication));
+            .authorize(processInstanceId, fieldNames, taskDto, authentication));
   }
 
   @Test
@@ -83,7 +77,7 @@ public class AuthorizationServiceTest {
     var invalidProcessInstance = "invalidProcessInstance";
     var exception = assertThrows(AccessDeniedException.class,
         () -> authorizationService
-            .authorize(invalidProcessInstance, fieldNames, taskDto, formDto, authentication));
+            .authorize(invalidProcessInstance, fieldNames, taskDto, authentication));
 
     assertThat(exception.getMessage()).isEqualTo(
         String.format(TASK_NOT_FOUND_IN_PROCESS_INSTANCE_MSG, taskId, invalidProcessInstance));
@@ -101,7 +95,7 @@ public class AuthorizationServiceTest {
 
     var exception = assertThrows(AccessDeniedException.class,
         () -> authorizationService.authorize(notActiveProcessInstanceId, fieldNames, taskDto,
-            formDto, authentication));
+            authentication));
 
     assertThat(exception.getMessage()).isEqualTo(String.format(TASK_IS_SUSPENDED_MSG, taskId));
   }
@@ -116,25 +110,10 @@ public class AuthorizationServiceTest {
 
     var exception = assertThrows(AccessDeniedException.class,
         () -> authorizationService
-            .authorize(processInstanceId, fieldNames, taskDto, formDto, authentication));
+            .authorize(processInstanceId, fieldNames, taskDto, authentication));
 
     assertThat(exception.getMessage()).isEqualTo(
         String.format(CURRENT_USER_IS_NOT_ASSIGNED_MSG, taskId));
-  }
-
-  @Test
-  public void shouldNotAuthorizeFileNameNotFound() {
-    var componentsDtos = List
-        .of(new ComponentsDto("invalidFiledName", "file", null, null, "application/pdf", "50MB",
-            null));
-    var formDto = new FormDto(componentsDtos);
-
-    var exception = assertThrows(AccessDeniedException.class,
-        () -> authorizationService
-            .authorize(processInstanceId, fieldNames, taskDto, formDto, authentication));
-
-    assertThat(exception.getMessage()).isEqualTo(
-        String.format(FIELD_NAMES_NOT_FOUND_MSG, fieldNames));
   }
 
   @Test
@@ -146,6 +125,6 @@ public class AuthorizationServiceTest {
 
     assertDoesNotThrow(
         () -> authorizationService
-            .authorize(processInstanceId, fieldNames, taskDto, formDto, authentication));
+            .authorize(processInstanceId, fieldNames, taskDto, authentication));
   }
 }

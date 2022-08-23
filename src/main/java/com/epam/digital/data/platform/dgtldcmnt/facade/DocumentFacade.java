@@ -26,7 +26,6 @@ import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentDto;
 import com.epam.digital.data.platform.dgtldcmnt.service.AuthorizationService;
 import com.epam.digital.data.platform.dgtldcmnt.service.DocumentService;
 import com.epam.digital.data.platform.dgtldcmnt.service.ValidationService;
-import com.epam.digital.data.platform.integration.formprovider.client.FormManagementProviderClient;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -46,7 +45,6 @@ public class DocumentFacade {
   private final AuthorizationService authorizationService;
   private final ValidationService validationService;
   private final TaskRestClient taskRestClient;
-  private final FormManagementProviderClient formProviderClient;
 
   /**
    * Put document to storage. Before uploading the method does authorization and validation.
@@ -64,11 +62,11 @@ public class DocumentFacade {
         processInstanceId);
 
     var task = taskRestClient.getTaskById(taskId);
-    var form = formProviderClient.getForm(task.getFormKey());
+    var formKey = task.getFormKey();
 
-    authorizationService
-        .authorize(processInstanceId, List.of(fieldName), task, form, authentication);
-    validationService.validate(uploadDocumentDto, form);
+    authorizationService.authorize(processInstanceId, List.of(fieldName), task,
+        authentication);
+    validationService.validate(uploadDocumentDto, formKey);
 
     var result = documentService.put(uploadDocumentDto);
     log.info("File {} for task {} has been uploaded", fieldName, taskId);
@@ -133,8 +131,8 @@ public class DocumentFacade {
   private void authorize(String processInstance, String taskId, List<String> filedNames,
       Authentication authentication) {
     var task = taskRestClient.getTaskById(taskId);
-    var form = formProviderClient.getForm(task.getFormKey());
 
-    authorizationService.authorize(processInstance, filedNames, task, form, authentication);
+    validationService.checkFieldNamesExistence(filedNames, task.getFormKey());
+    authorizationService.authorize(processInstance, filedNames, task, authentication);
   }
 }
