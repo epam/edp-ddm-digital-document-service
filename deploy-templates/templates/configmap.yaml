@@ -9,7 +9,7 @@ data:
     spring.servlet.multipart.max-file-size: 50MB
     ceph.http-endpoint: {{ .Values.ceph.host }}
     s3: {{ .Values.s3 | toYaml | nindent 6 }}
-    form-management-provider.url: http://form-management-provider:3001
+    form-submission-validation.url: http://form-submission-validation:8080
     bpms.url: http://bpms:8080
     {{- if eq .Values.deployProfile "dev" }}
     management.endpoints.web.exposure.include: '*'
