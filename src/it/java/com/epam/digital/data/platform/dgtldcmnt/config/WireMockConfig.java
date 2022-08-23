@@ -37,9 +37,9 @@ public class WireMockConfig {
     return createAndStartMockServerForUrl(urlStr);
   }
 
-  @Qualifier("form-provider")
+  @Qualifier("form-validation")
   @Bean(destroyMethod = "stop")
-  public WireMockServer restFormProviderWireMock(@Value("${form-management-provider.url}") String urlStr)
+  public WireMockServer restFormProviderWireMock(@Value("${form-submission-validation.url}") String urlStr)
       throws MalformedURLException {
     return createAndStartMockServerForUrl(urlStr);
   }

@@ -17,5 +17,5 @@ s3:
 
 bpms:
   url: http://localhost:8100
-form-management-provider:
+form-submission-validation:
   url: http://localhost:8082
