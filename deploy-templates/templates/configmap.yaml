@@ -13,5 +13,7 @@ data:
     bpms.url: http://bpms:8080
     {{- if eq .Values.deployProfile "dev" }}
     management.endpoints.web.exposure.include: '*'
+    {{- else }}
+    management.endpoints.web.exposure.include: 'health, prometheus'
     {{- end }}
     platform.security.csrf.enabled: {{ .Values.platform.security.csrf.enabled }}
