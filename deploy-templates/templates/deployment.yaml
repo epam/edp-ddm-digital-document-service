@@ -16,8 +16,16 @@ spec:
     type: RollingUpdate
   template:
     metadata:
+      {{- if or .Values.podAnnotations .Values.global.registry.digitalDocumentService.istio.sidecar.enabled }}
       annotations:
-        sidecar.istio.io/inject: "true"
+        {{- range $key, $value := .Values.podAnnotations }}
+        {{ $key }}: {{ $value | quote }}
+        {{- end }}
+        {{- if .Values.global.registry.digitalDocumentService.istio.sidecar.enabled }}
+        sidecar.istio.io/inject: 'true'
+        {{- include "digitalDocumentService.istioResources" . | nindent 8 }}
+        {{- end }}
+      {{- end }}
       labels:
         app: {{ .Chart.Name }}
     spec:
@@ -47,14 +55,13 @@ spec:
           timeoutSeconds: 5
         {{- if not .Values.global.disableRequestsLimits }}  
         resources:
-          limits:
-            cpu: 500m
-            memory: 768Mi
-          requests:
-            cpu: 500m
-            memory: 768Mi
+          {{- toYaml .Values.global.registry.digitalDocumentService.container.resources | nindent 10 }}
         {{- end }}    
         env:
+          {{- range $name, $value := .Values.global.registry.digitalDocumentService.container.envVars }}
+          - name: {{ $name }}
+            value: {{ $value | quote}}
+          {{- end }}
           - name: CEPH_BUCKET_HOST
             valueFrom:
               configMapKeyRef:
@@ -70,8 +77,6 @@ spec:
               configMapKeyRef:
                 name: {{ .Values.ceph.bucketName }}
                 key: BUCKET_NAME
-          - name: JAVA_OPTS
-            value: {{ .Values.javaOpts }}
         volumeMounts:
           - name: {{ .Chart.Name }}
             mountPath: {{ .Values.appConfigMountPath }}
