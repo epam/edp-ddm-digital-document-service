@@ -1,6 +1,20 @@
 global:
   disableRequestsLimits: true
+  registry:
+    digitalDocumentService:
+      istio:
+        sidecar:
+          enabled: true
+          resources:
+            limits: {}
+            requests: {}
+      container:
+        resources: {}
+        envVars:
+          JAVA_OPTS: "-Xms512m -Xmx512m"
 
+
+podAnnotations: {}
 image:
   name: digital-document-service
   version: latest
@@ -36,5 +50,3 @@ keycloak:
   certificatesEndpoint: /protocol/openid-connect/certs
 
 deployProfile: prod
-
-javaOpts: "-Xms512m -Xmx512m"
