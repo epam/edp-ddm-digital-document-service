@@ -18,15 +18,16 @@
 
   <properties>
     <ddm-starter-security.version>1.6.0.1</ddm-starter-security.version>
-    <ddm-starter-actuator.version>1.6.0.1</ddm-starter-actuator.version>
-    <ddm-starter-logger.version>1.6.0.1</ddm-starter-logger.version>
-	  <log4j.version>2.17.0</log4j.version>
-    <ddm-starter-error-handler.version>1.6.0.1</ddm-starter-error-handler.version>
-    <ddm-starter-validation.version>1.6.0.3</ddm-starter-validation.version>
+    <ddm-starter-actuator.version>1.6.0.3</ddm-starter-actuator.version>
+    <ddm-starter-logger.version>1.6.0.6</ddm-starter-logger.version>
+    <log4j.version>2.17.0</log4j.version>
+    <ddm-starter-error-handler.version>1.6.0.5</ddm-starter-error-handler.version>
+    <ddm-starter-validation.version>1.6.0.4</ddm-starter-validation.version>
     <bpms-client.version>1.6.0.1</bpms-client.version>
     <ddm-file-storage.version>1.7.0.1</ddm-file-storage.version>
 
     <apache.commons.io.version>2.6</apache.commons.io.version>
+    <jackson-databind.version>2.13.4</jackson-databind.version>
 
     <sonar.coverage.exclusions>
       **/com/epam/digital/data/platform/dgtldcmnt/dto/**,
@@ -50,7 +51,12 @@
         <groupId>org.apache.logging.log4j</groupId>
         <artifactId>log4j-core</artifactId>
         <version>${log4j.version}</version>
-	    </dependency>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>${jackson-databind.version}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
