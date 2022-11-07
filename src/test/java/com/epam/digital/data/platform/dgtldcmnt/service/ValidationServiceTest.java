@@ -25,9 +25,10 @@ import static org.mockito.Mockito.when;
 import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentDto;
 import com.epam.digital.data.platform.integration.formprovider.client.FormValidationClient;
 import com.epam.digital.data.platform.integration.formprovider.dto.FileDataValidationDto;
-import com.epam.digital.data.platform.integration.formprovider.dto.FileFieldErrorDto;
-import com.epam.digital.data.platform.integration.formprovider.dto.FormErrorDetailDto;
-import com.epam.digital.data.platform.integration.formprovider.exception.FileFieldValidationException;
+import com.epam.digital.data.platform.integration.formprovider.exception.SubmissionValidationException;
+import com.epam.digital.data.platform.starter.errorhandling.dto.ErrorDetailDto;
+import com.epam.digital.data.platform.starter.errorhandling.dto.ErrorsListDto;
+import com.epam.digital.data.platform.starter.errorhandling.dto.ValidationErrorDto;
 import com.epam.digital.data.platform.starter.errorhandling.exception.ValidationException;
 import com.epam.digital.data.platform.storage.file.dto.FileMetadataDto;
 import com.epam.digital.data.platform.storage.file.repository.FormDataFileRepository;
@@ -125,10 +126,10 @@ public class ValidationServiceTest {
         .documentKey(fieldName)
         .build();
 
-    doThrow(new FileFieldValidationException(
-        FileFieldErrorDto.builder().code("422").message(errorMessage).traceId("traceId")
-            .errors(List.of(
-                new FormErrorDetailDto())).build())).when(formValidationClient)
+    doThrow(new SubmissionValidationException(
+        ValidationErrorDto.builder().code("VALIDATION_ERROR").message(errorMessage).traceId("traceId")
+            .details(new ErrorsListDto(List.of(new ErrorDetailDto()))).build()))
+        .when(formValidationClient)
         .validateFileField("formKey", fieldName, formValidationDto);
     var exception = assertThrows(ValidationException.class,
         () -> validationService.validate(uploadDto));
