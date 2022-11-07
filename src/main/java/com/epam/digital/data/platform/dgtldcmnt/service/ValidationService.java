@@ -20,7 +20,7 @@ import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentDto;
 import com.epam.digital.data.platform.integration.formprovider.client.FormValidationClient;
 import com.epam.digital.data.platform.integration.formprovider.dto.FileDataValidationDto;
 import com.epam.digital.data.platform.integration.formprovider.dto.FormFieldListValidationDto;
-import com.epam.digital.data.platform.integration.formprovider.exception.FileFieldValidationException;
+import com.epam.digital.data.platform.integration.formprovider.exception.SubmissionValidationException;
 import com.epam.digital.data.platform.starter.errorhandling.BaseRestExceptionHandler;
 import com.epam.digital.data.platform.starter.errorhandling.dto.ValidationErrorDto;
 import com.epam.digital.data.platform.starter.errorhandling.exception.ValidationException;
@@ -67,8 +67,8 @@ public class ValidationService {
     try {
       formValidationClient
           .validateFileField(uploadDto.getFormKey(), uploadDto.getFieldName(), fileData);
-    } catch (FileFieldValidationException exception) {
-      throw createValidationException(exception);
+    } catch (SubmissionValidationException exception) {
+      throw new ValidationException(exception.getErrors());
     }
     verifyTotalFilesSize(uploadDto);
     log.debug("File {} type and size are valid. Task {}", uploadDto.getFieldName(),
@@ -79,8 +79,8 @@ public class ValidationService {
     try {
       formValidationClient.checkFieldNames(formKey,
           FormFieldListValidationDto.builder().fields(fieldNames).build());
-    } catch (FileFieldValidationException exception) {
-      throw new AccessDeniedException(exception.getFileFieldError().getMessage());
+    } catch (SubmissionValidationException exception) {
+      throw new AccessDeniedException(exception.getErrors().getMessage());
     }
   }
 
@@ -106,16 +106,6 @@ public class ValidationService {
         .traceId(MDC.get(BaseRestExceptionHandler.TRACE_ID_KEY))
         .code(String.valueOf(HttpStatus.UNPROCESSABLE_ENTITY.value()))
         .message(msg)
-        .build();
-    return new ValidationException(error);
-  }
-
-  private ValidationException createValidationException(FileFieldValidationException exception) {
-    var fileFieldError = exception.getFileFieldError();
-    var error = ValidationErrorDto.builder()
-        .traceId(fileFieldError.getTraceId())
-        .code(fileFieldError.getCode())
-        .message(fileFieldError.getMessage())
         .build();
     return new ValidationException(error);
   }
