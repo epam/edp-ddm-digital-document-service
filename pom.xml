@@ -25,6 +25,7 @@
     <ddm-starter-validation.version>1.6.0.4</ddm-starter-validation.version>
     <bpms-client.version>1.6.0.1</bpms-client.version>
     <ddm-file-storage.version>1.7.0.1</ddm-file-storage.version>
+    <spring-security-core.version>5.7.5</spring-security-core.version>
 
     <apache.commons.io.version>2.6</apache.commons.io.version>
     <jackson-databind.version>2.13.4</jackson-databind.version>
@@ -56,6 +57,11 @@
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-databind</artifactId>
         <version>${jackson-databind.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.security</groupId>
+        <artifactId>spring-security-core</artifactId>
+        <version>${spring-security-core.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
