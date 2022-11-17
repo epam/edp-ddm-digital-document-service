@@ -6,8 +6,8 @@ spring:
     name: digital-document-service
   servlet:
     multipart:
-      max-file-size: 50MB
-      max-request-size: 50MB
+      max-file-size: 100MB
+      max-request-size: 100MB
   sleuth:
     opentracing:
       enabled: true
@@ -75,5 +75,6 @@ logbook:
       - x-userinfo
 
 digital-document-service:
+  max-batch-file-size-mb: 100
   content:
     disposition-type: attachment

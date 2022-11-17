@@ -63,10 +63,11 @@ public class DocumentFacade {
 
     var task = taskRestClient.getTaskById(taskId);
     var formKey = task.getFormKey();
+    uploadDocumentDto.setFormKey(formKey);
 
     authorizationService.authorize(processInstanceId, List.of(fieldName), task,
         authentication);
-    validationService.validate(uploadDocumentDto, formKey);
+    validationService.validate(uploadDocumentDto);
 
     var result = documentService.put(uploadDocumentDto);
     log.info("File {} for task {} has been uploaded", fieldName, taskId);

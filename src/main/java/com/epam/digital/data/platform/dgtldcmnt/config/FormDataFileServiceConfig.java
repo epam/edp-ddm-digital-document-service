@@ -4,7 +4,9 @@ import com.epam.digital.data.platform.integration.ceph.config.S3ConfigProperties
 import com.epam.digital.data.platform.integration.ceph.factory.CephS3Factory;
 import com.epam.digital.data.platform.storage.file.config.FileDataCephStorageConfiguration;
 import com.epam.digital.data.platform.storage.file.factory.FormDataFileStorageServiceFactory;
+import com.epam.digital.data.platform.storage.file.repository.FormDataFileRepository;
 import com.epam.digital.data.platform.storage.file.service.FormDataFileStorageService;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -41,5 +43,12 @@ public class FormDataFileServiceConfig {
   public FormDataFileStorageService formDataFileStorageService(FormDataFileStorageServiceFactory factory,
                                                            FileDataCephStorageConfiguration config) {
     return factory.fromDataFileStorageService(config);
+  }
+
+  @Bean
+  @ConditionalOnMissingBean
+  public FormDataFileRepository formDataFileRepository(FormDataFileStorageServiceFactory factory,
+      FileDataCephStorageConfiguration config) {
+    return factory.newCephFormDataFileRepository(config);
   }
 }
