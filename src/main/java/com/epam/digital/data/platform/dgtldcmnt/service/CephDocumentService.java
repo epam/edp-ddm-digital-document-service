@@ -174,6 +174,8 @@ public class CephDocumentService implements DocumentService {
     return FileMetadataDto.builder()
         .filename(encodeUtf8(uploadDocumentDto.getFilename()))
         .contentType(uploadDocumentDto.getContentType())
+        .fieldName(uploadDocumentDto.getFieldName())
+        .formKey(uploadDocumentDto.getFormKey())
         .checksum(checksum)
         .id(id)
         .build();

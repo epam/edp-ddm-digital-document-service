@@ -16,9 +16,11 @@
 
 package com.epam.digital.data.platform.dgtldcmnt.service;
 
+import static com.epam.digital.data.platform.dgtldcmnt.service.ValidationService.TOTAL_FILES_SIZE_EXCEEDS_MAX_BATCH_FILES_SIZE_MSG;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 
 import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentDto;
 import com.epam.digital.data.platform.integration.formprovider.client.FormValidationClient;
@@ -27,7 +29,10 @@ import com.epam.digital.data.platform.integration.formprovider.dto.FileFieldErro
 import com.epam.digital.data.platform.integration.formprovider.dto.FormErrorDetailDto;
 import com.epam.digital.data.platform.integration.formprovider.exception.FileFieldValidationException;
 import com.epam.digital.data.platform.starter.errorhandling.exception.ValidationException;
+import com.epam.digital.data.platform.storage.file.dto.FileMetadataDto;
+import com.epam.digital.data.platform.storage.file.repository.FormDataFileRepository;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,16 +46,21 @@ public class ValidationServiceTest {
   private final String processInstanceId = "testProcessInstanceId";
   private final String fieldName = "testUpload1";
   private final String filePattern = "application/pdf";
+  private final String formKey = "formKey";
   private final Long size = 1000L;
+  private Double maxBatchFilesSize = 100.0;
 
   @Mock
   private FormValidationClient formValidationClient;
+  @Mock
+  private FormDataFileRepository formDataFileRepository;
 
   private ValidationService validationService;
 
   @BeforeEach
   public void init() {
-   validationService = new ValidationService(formValidationClient);
+    validationService = new ValidationService(formValidationClient, formDataFileRepository);
+    validationService.setMaxBatchFileSize(maxBatchFilesSize);
   }
 
   @Test
@@ -59,11 +69,40 @@ public class ValidationServiceTest {
         .processInstanceId(processInstanceId)
         .contentType(filePattern)
         .fieldName(fieldName)
+        .formKey(formKey)
         .taskId(taskId)
         .size(size)
         .build();
+    var metadata = new FileMetadataDto(size, null, Map.of(
+        "formKey", formKey,
+        "fieldName", fieldName
+    ));
+    when(formDataFileRepository.getMetadata(processInstanceId)).thenReturn(List.of(metadata));
 
-    validationService.validate(uploadDto, "formKey");
+    validationService.validate(uploadDto);
+  }
+
+  @Test
+  public void shouldNotValidateBatchFileSizeExceedsMaxBatchFileSize() {
+    var uploadDto = UploadDocumentDto.builder()
+        .processInstanceId(processInstanceId)
+        .contentType(filePattern)
+        .fieldName(fieldName)
+        .formKey(formKey)
+        .taskId(taskId)
+        .size(size)
+        .build();
+    var metadata = new FileMetadataDto(114857700L, null, Map.of(
+        "formKey", formKey,
+        "fieldName", fieldName
+    ));
+    when(formDataFileRepository.getMetadata(processInstanceId)).thenReturn(List.of(metadata));
+
+    var exception = assertThrows(ValidationException.class,
+        () -> validationService.validate(uploadDto));
+
+    assertThat(exception.getMessage()).isEqualTo(
+        String.format(TOTAL_FILES_SIZE_EXCEEDS_MAX_BATCH_FILES_SIZE_MSG, maxBatchFilesSize));
   }
 
   @Test
@@ -74,6 +113,7 @@ public class ValidationServiceTest {
         .processInstanceId(processInstanceId)
         .contentType(unsupportedContentType)
         .fieldName(fieldName)
+        .formKey(formKey)
         .taskId(taskId)
         .size(size)
         .filename("fileName")
@@ -91,7 +131,7 @@ public class ValidationServiceTest {
                 new FormErrorDetailDto())).build())).when(formValidationClient)
         .validateFileField("formKey", fieldName, formValidationDto);
     var exception = assertThrows(ValidationException.class,
-        () -> validationService.validate(uploadDto, "formKey"));
+        () -> validationService.validate(uploadDto));
 
     assertThat(exception.getMessage()).isEqualTo(errorMessage);
   }
