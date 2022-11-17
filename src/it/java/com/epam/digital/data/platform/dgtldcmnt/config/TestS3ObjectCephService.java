@@ -24,6 +24,7 @@ import com.epam.digital.data.platform.integration.ceph.service.CephService;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -81,6 +82,15 @@ public class TestS3ObjectCephService implements CephService {
   }
 
   @Override
+  public List<CephObjectMetadata> getMetadata(String cephBucketName, String prefix) {
+    var keys = storage.keySet().stream().filter(k -> k.startsWith(prefix))
+        .collect(Collectors.toList());
+    var objectMetadata = keys.stream().map(k -> storage.get(k).getObjectMetadata())
+        .collect(Collectors.toList());
+    return toCephObjectMetadataList(objectMetadata);
+  }
+
+  @Override
   public void delete(String cephBucketName, Set<String> keys) {
     keys.forEach(storage::remove);
   }
@@ -98,6 +108,11 @@ public class TestS3ObjectCephService implements CephService {
   @Override
   public Set<String> getKeys(String cephBucketName, String prefix) {
     return storage.keySet().stream().filter(k -> k.startsWith(prefix)).collect(Collectors.toSet());
+  }
+
+  @Override
+  public Set<String> getKeys(String cephBucketName) {
+    return new HashSet<>();
   }
 
   private List<CephObjectMetadata> toCephObjectMetadataList(

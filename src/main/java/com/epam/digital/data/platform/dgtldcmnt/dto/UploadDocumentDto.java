@@ -45,6 +45,11 @@ public class UploadDocumentDto {
   private String fieldName;
 
   /**
+   * The key of ui form in which document is loaded.
+   */
+  private String formKey;
+
+  /**
    * The process instance id to whom the document belongs to. It is used for authorization.
    */
   private String processInstanceId;

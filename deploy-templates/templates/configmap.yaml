@@ -5,8 +5,8 @@ metadata:
 data:
   application.yml: |-
     server.max-http-header-size: 32KB
-    spring.servlet.multipart.max-request-size: 50MB
-    spring.servlet.multipart.max-file-size: 50MB
+    spring.servlet.multipart.max-request-size: 100MB
+    spring.servlet.multipart.max-file-size: 100MB
     ceph.http-endpoint: {{ .Values.ceph.host }}
     s3: {{ .Values.s3 | toYaml | nindent 6 }}
     form-submission-validation.url: http://form-submission-validation:8080
@@ -17,3 +17,4 @@ data:
     management.endpoints.web.exposure.include: 'health, prometheus'
     {{- end }}
     platform.security.csrf.enabled: {{ .Values.platform.security.csrf.enabled }}
+    digital-document-service.max-batch-file-size-mb: 100
