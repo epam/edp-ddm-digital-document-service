@@ -186,4 +186,32 @@ public class CephDocumentServiceTest {
 
     assertThrows(FileNotFoundException.class, () -> service.getMetadata(getMetadataDto));
   }
+
+  @Test
+  void shouldGetDocumentWhenFileNameNull() throws IOException {
+    var getDocumentDto = GetDocumentDto.builder()
+        .processInstanceId(processInstanceId)
+        .id(key)
+        .build();
+    var metadataDto = FileMetadataDto.builder()
+        .contentLength(contentLength)
+        .contentType(contentType)
+        .build();
+    var fileDataDto = FileDataDto.builder()
+        .content(new ByteArrayInputStream(data))
+        .metadata(metadataDto)
+        .build();
+
+    when(
+        fromDataFileStorageService.loadByProcessInstanceIdAndId(processInstanceId, key)).thenReturn(
+        fileDataDto);
+
+    DocumentDto documentDto = service.get(getDocumentDto);
+
+    assertThat(documentDto).isNotNull();
+    assertThat(documentDto.getName()).isNull();
+    assertThat(documentDto.getContentType()).isEqualTo(contentType);
+    assertThat(documentDto.getSize()).isEqualTo(contentLength);
+    assertThat(documentDto.getContent().readAllBytes()).isEqualTo(data);
+  }
 }

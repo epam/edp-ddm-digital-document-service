@@ -35,6 +35,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -162,11 +163,9 @@ public class CephDocumentService implements DocumentService {
   }
 
   private String decodeUtf8(String value) {
-    try {
-      return URLDecoder.decode(value, StandardCharsets.UTF_8.name());
-    } catch (UnsupportedEncodingException e) {
-      throw new IllegalArgumentException("Unable to decode value", e);
-    }
+    return Optional.ofNullable(value)
+        .map(v -> URLDecoder.decode(v, StandardCharsets.UTF_8))
+        .orElse(null);
   }
 
   private FileMetadataDto buildFileMetadata(String id, String checksum,
