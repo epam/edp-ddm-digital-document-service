@@ -10,8 +10,7 @@ global:
             requests: {}
       container:
         resources: {}
-        envVars:
-          JAVA_OPTS: "-Xms512m -Xmx512m"
+        envVars: {}
 
 
 podAnnotations: {}
