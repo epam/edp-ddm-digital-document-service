@@ -30,12 +30,24 @@
 {{- end }}
 {{- end -}}
 
+{{- define "issuer.admin" -}}
+{{- if .Values.keycloak.customHost }}
+{{- printf "%s-%s" (include "keycloak.customUrlPrefix" .) .Values.keycloak.realms.admin -}}
+{{- else }}
+{{- printf "%s-%s" (include "keycloak.urlPrefix" .) .Values.keycloak.realms.admin -}}
+{{- end }}
+{{- end -}}
+
 {{- define "jwksUri.officer" -}}
 {{- printf "%s-%s%s" (include "keycloak.urlPrefix" .) .Values.keycloak.realms.officer .Values.keycloak.certificatesEndpoint -}}
 {{- end -}}
 
 {{- define "jwksUri.citizen" -}}
 {{- printf "%s-%s%s" (include "keycloak.urlPrefix" .) .Values.keycloak.realms.citizen .Values.keycloak.certificatesEndpoint -}}
+{{- end -}}
+
+{{- define "jwksUri.admin" -}}
+{{- printf "%s-%s%s" (include "keycloak.urlPrefix" .) .Values.keycloak.realms.admin .Values.keycloak.certificatesEndpoint -}}
 {{- end -}}
 
 {{- define "digitalDocumentService.istioResources" -}}

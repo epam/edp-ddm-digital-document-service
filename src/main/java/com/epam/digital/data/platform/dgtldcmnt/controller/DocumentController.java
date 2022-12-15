@@ -22,7 +22,6 @@ import com.epam.digital.data.platform.dgtldcmnt.dto.GetDocumentDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.GetDocumentsMetadataDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentDto;
 import com.epam.digital.data.platform.dgtldcmnt.facade.DocumentFacade;
-import com.epam.digital.data.platform.starter.security.annotation.PreAuthorizeAnySystemRole;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -51,7 +50,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@PreAuthorizeAnySystemRole
 @RequestMapping("/documents")
 public class DocumentController {
 
