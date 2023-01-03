@@ -18,3 +18,4 @@ data:
     {{- end }}
     platform.security.csrf.enabled: {{ .Values.platform.security.csrf.enabled }}
     digital-document-service.max-batch-file-size-mb: 100
+    digital-document-service.max-remote-file-size-mb: 10

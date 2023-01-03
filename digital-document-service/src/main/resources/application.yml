@@ -1,0 +1,81 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: digital-document-service
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+  sleuth:
+    opentracing:
+      enabled: true
+    baggage:
+      correlation-enabled: true
+      correlation-fields: x-request-id, X-Primary-Request-URL
+      remote-fields: x-request-id, x-access-token, X-Primary-Request-URL
+
+# Configuration => prometheus.yml:
+#   scrape_configs:
+#     metrics_path: '/actuator/prometheus'
+management:
+  endpoints:
+    web:
+      exposure:
+        include: 'health'
+  endpoint:
+    health:
+      enabled: true
+      show-details: always
+      group:
+        liveness:
+          include: livenessState
+        readiness:
+          include: readinessState
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+    kafka:
+      enabled: false
+
+springdoc:
+  swagger-ui:
+    path: "/swagger"
+    csrf:
+      enabled: true
+
+platform:
+  logging:
+    aspect:
+      enabled: false
+    primary-url:
+      enabled: true
+
+ceph:
+  bucket: ${CEPH_BUCKET_NAME:bucket}
+
+logbook:
+  feign:
+    enabled: true
+  info-logging:
+    enabled: true
+  strategy: without-body
+  exclude:
+    - /v3/api-docs/**
+    - /swagger-ui/**
+    - /actuator/**
+    - /swagger
+  obfuscate:
+    headers:
+      - x-access-token
+      - x-id-token
+      - x-userinfo
+
+digital-document-service:
+  max-batch-file-size-mb: 100
+  max-remote-file-size-mb: 10
+  content:
+    disposition-type: attachment

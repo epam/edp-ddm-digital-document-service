@@ -1,0 +1,12 @@
+bpms:
+  url: http://localhost:8090
+form-submission-validation:
+  url: http://localhost:8088
+remote-file-repository:
+  url: http://localhost:8091
+
+ceph:
+  http-endpoint: localhost:1000
+  access-key: access-key
+  secret-key: secret-key
+  bucket: bucket-name
