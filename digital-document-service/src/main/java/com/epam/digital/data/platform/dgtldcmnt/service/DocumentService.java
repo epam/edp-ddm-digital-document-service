@@ -65,4 +65,12 @@ public interface DocumentService {
    * @param processInstanceId specified process instance id
    */
   void delete(String processInstanceId);
+
+  /**
+   * Delete document associated with provided process instance id and file id
+   *
+   * @param processInstanceId specified process instance id
+   * @param fileId specified file id
+   */
+  void delete(String processInstanceId, String fileId);
 }
