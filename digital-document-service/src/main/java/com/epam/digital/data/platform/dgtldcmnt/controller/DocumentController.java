@@ -16,6 +16,7 @@
 
 package com.epam.digital.data.platform.dgtldcmnt.controller;
 
+import com.epam.digital.data.platform.dgtldcmnt.dto.DeleteDocumentDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.DocumentMetadataDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.DocumentMetadataSearchRequestDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.GetDocumentDto;
@@ -167,5 +168,27 @@ public class DocumentController {
   @DeleteMapping("/{processInstanceId}")
   public void delete(@PathVariable("processInstanceId") String processInstanceId) {
     documentFacade.delete(processInstanceId);
+  }
+
+  /**
+   * Endpoint that deletes document associated with specified process instance id and file id.
+   *
+   * @param processInstanceId specified process instance id
+   * @param fileId specified file id
+   */
+  @DeleteMapping("/{processInstanceId}/{taskId}/{fieldName}/{fileId}")
+  @Operation(summary = "Delete document by id")
+  public void deleteByFileId(@PathVariable("processInstanceId") String processInstanceId,
+      @PathVariable("taskId") String taskId,
+      @PathVariable("fieldName") String fieldName,
+      @PathVariable("fileId") String fileId,
+      Authentication authentication) {
+    var deleteDocumentDto = DeleteDocumentDto.builder()
+        .processInstanceId(processInstanceId)
+        .fieldName(fieldName)
+        .taskId(taskId)
+        .id(fileId)
+        .build();
+    documentFacade.delete(deleteDocumentDto, authentication);
   }
 }
