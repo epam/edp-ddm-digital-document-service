@@ -17,6 +17,7 @@
 package com.epam.digital.data.platform.dgtldcmnt.facade;
 
 import com.epam.digital.data.platform.bpms.client.TaskRestClient;
+import com.epam.digital.data.platform.dgtldcmnt.dto.DeleteDocumentDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.DocumentDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.DocumentIdDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.DocumentMetadataDto;
@@ -127,6 +128,23 @@ public class DocumentFacade {
    */
   public void delete(String processInstanceId) {
     documentService.delete(processInstanceId);
+  }
+
+  /**
+   * Delete document associated with provided process instance id and file id
+   *
+   * @param deleteDocumentDto contains document ids and a context of the documents.
+   * @param authentication object with authentication data.
+   */
+  public void delete(DeleteDocumentDto deleteDocumentDto, Authentication authentication) {
+    var taskId = deleteDocumentDto.getTaskId();
+    var processInstanceId = deleteDocumentDto.getProcessInstanceId();
+    var fieldName = deleteDocumentDto.getFieldName();
+
+    log.info("Deleting file {} for task {} in process {}", fieldName, taskId, processInstanceId);
+    authorize(processInstanceId, taskId, List.of(fieldName), authentication);
+    documentService.delete(processInstanceId, deleteDocumentDto.getId());
+    log.info("File {} for task {} has been deleted", fieldName, taskId);
   }
 
   private void authorize(String processInstance, String taskId, List<String> filedNames,

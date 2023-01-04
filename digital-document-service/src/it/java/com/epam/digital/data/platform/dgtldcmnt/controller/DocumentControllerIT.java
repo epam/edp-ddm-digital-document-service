@@ -213,6 +213,32 @@ class DocumentControllerIT extends BaseIT {
     mockMvc.perform(request).andExpect(status().is4xxClientError());
   }
 
+  @Test
+  void shouldDeleteFileById() throws Exception {
+    var documentMetadataDto = uploadFile(filename, contentType, data, createDocumentContextDto());
+    var id = documentMetadataDto.getId();
+
+    var deleteUrl = UriComponentsBuilder.newInstance().pathSegment("documents")
+        .pathSegment(processInstanceId)
+        .pathSegment(taskId)
+        .pathSegment(fieldName)
+        .pathSegment(id)
+        .toUriString();
+    var deleteReq = delete(deleteUrl);
+    deleteReq.header(JwtAuthenticationFilter.AUTHORIZATION_HEADER, accessToken);
+    mockMvc.perform(deleteReq).andExpect(status().isOk());
+
+    var uriBuilder = UriComponentsBuilder.newInstance().pathSegment("documents")
+        .pathSegment(processInstanceId)
+        .pathSegment(taskId)
+        .pathSegment(fieldName)
+        .pathSegment(id);
+    var request = get(uriBuilder.toUriString()).accept(MediaType.APPLICATION_JSON_VALUE);
+    request.header(JwtAuthenticationFilter.AUTHORIZATION_HEADER, accessToken);
+
+    mockMvc.perform(request).andExpect(status().is4xxClientError());
+  }
+
   @SneakyThrows
   private DocumentMetadataDto uploadFile(String filename, String contentType, byte[] data,
       UploadDocumentDto contextDto) {
