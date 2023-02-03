@@ -1,5 +1,5 @@
 global:
-  disableRequestsLimits: true
+  disableRequestsLimits: false
   registry:
     digitalDocumentService:
       istio:
