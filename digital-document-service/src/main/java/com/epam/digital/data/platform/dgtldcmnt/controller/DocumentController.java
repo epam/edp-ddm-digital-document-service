@@ -27,10 +27,12 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import javax.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
@@ -52,19 +54,14 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/documents")
+@RequiredArgsConstructor
 public class DocumentController {
 
   public static final String X_FORWARDED_HOST_HEADER = "x-forwarded-host";
 
+  @Value("${digital-document-service.content.disposition-type}")
   private final String contentDispositionType;
   private final DocumentFacade documentFacade;
-
-  public DocumentController(
-      @Value("${digital-document-service.content.disposition-type}") String contentDispositionType,
-      DocumentFacade documentFacade) {
-    this.contentDispositionType = contentDispositionType;
-    this.documentFacade = documentFacade;
-  }
 
   /**
    * Endpoint for uploading document.
@@ -93,7 +90,7 @@ public class DocumentController {
       Authentication authentication) throws IOException {
     var uploadDocumentDto = UploadDocumentDto.builder()
         .filename(Objects.isNull(filename) ? file.getOriginalFilename() : filename)
-        .fileInputStream(file.getInputStream())
+        .fileInputStream(new BufferedInputStream(file.getInputStream()))
         .contentType(file.getContentType())
         .processInstanceId(processInstanceId)
         .originRequestUrl(originRequestUrl)
@@ -160,8 +157,7 @@ public class DocumentController {
 
   /**
    * Endpoint that deletes all documents associated with specified process instance id. The endpoint
-   * should be allowed only in internal network for system needs only as cleaning temporary
-   * data.
+   * should be allowed only in internal network for system needs only as cleaning temporary data.
    *
    * @param processInstanceId specified process instance id
    */
@@ -174,7 +170,7 @@ public class DocumentController {
    * Endpoint that deletes document associated with specified process instance id and file id.
    *
    * @param processInstanceId specified process instance id
-   * @param fileId specified file id
+   * @param fileId            specified file id
    */
   @DeleteMapping("/{processInstanceId}/{taskId}/{fieldName}/{fileId}")
   @Operation(summary = "Delete document by id")

@@ -27,12 +27,14 @@ import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentDto;
 import com.epam.digital.data.platform.dgtldcmnt.service.AuthorizationService;
 import com.epam.digital.data.platform.dgtldcmnt.service.DocumentService;
 import com.epam.digital.data.platform.dgtldcmnt.service.ValidationService;
+import com.epam.digital.data.platform.dgtldcmnt.validator.AllowedUploadedDocument;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * The document facade for management of the documents. It contains authorization and validation.
@@ -40,6 +42,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@Validated
 public class DocumentFacade {
 
   private final DocumentService documentService;
@@ -54,7 +57,7 @@ public class DocumentFacade {
    * @param authentication    object with authentication data.
    * @return {@link DocumentMetadataDto} of the saved document.
    */
-  public DocumentMetadataDto put(UploadDocumentDto uploadDocumentDto,
+  public DocumentMetadataDto put(@AllowedUploadedDocument UploadDocumentDto uploadDocumentDto,
       Authentication authentication) {
     var taskId = uploadDocumentDto.getTaskId();
     var processInstanceId = uploadDocumentDto.getProcessInstanceId();
@@ -134,7 +137,7 @@ public class DocumentFacade {
    * Delete document associated with provided process instance id and file id
    *
    * @param deleteDocumentDto contains document ids and a context of the documents.
-   * @param authentication object with authentication data.
+   * @param authentication    object with authentication data.
    */
   public void delete(DeleteDocumentDto deleteDocumentDto, Authentication authentication) {
     var taskId = deleteDocumentDto.getTaskId();
