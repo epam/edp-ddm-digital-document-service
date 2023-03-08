@@ -73,6 +73,7 @@ logbook:
       - x-access-token
       - x-id-token
       - x-userinfo
+      - cookie
 
 digital-document-service:
   max-batch-file-size-mb: 100
