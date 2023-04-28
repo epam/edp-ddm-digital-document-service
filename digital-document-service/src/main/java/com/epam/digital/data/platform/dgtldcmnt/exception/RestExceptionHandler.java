@@ -25,12 +25,15 @@ import javax.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.util.unit.DataSize;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.server.UnsupportedMediaTypeStatusException;
 
@@ -38,6 +41,9 @@ import org.springframework.web.server.UnsupportedMediaTypeStatusException;
 @ControllerAdvice
 @RequiredArgsConstructor
 public class RestExceptionHandler {
+
+  @Value("${spring.servlet.multipart.max-request-size}")
+  private DataSize maxRequestSize;
 
   /**
    * It handles base spring-validation/servlet 'bad request' exceptions and wraps it into
@@ -110,6 +116,17 @@ public class RestExceptionHandler {
     log.error("Constraint violation exception");
     error.setCode(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
     return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+  }
+
+  @ExceptionHandler(MaxUploadSizeExceededException.class)
+  public ResponseEntity<SystemErrorDto> handleMaxFileSizeExceeded(MaxUploadSizeExceededException ex) {
+    var error = SystemErrorDto.builder()
+            .traceId(MDC.get(BaseRestExceptionHandler.TRACE_ID_KEY))
+            .code(String.valueOf(HttpStatus.UNPROCESSABLE_ENTITY.value()))
+            .message(String.format("The total size of the uploaded files exceeds %sMB", maxRequestSize.toMegabytes()))
+            .build();
+    log.error("Max upload file size is exceeded", ex);
+    return new ResponseEntity<>(error, HttpStatus.UNPROCESSABLE_ENTITY);
   }
 
   private Annotation getAnnotationFromConstraintViolationException(
