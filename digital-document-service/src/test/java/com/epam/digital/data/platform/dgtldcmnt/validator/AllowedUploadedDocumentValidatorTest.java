@@ -18,8 +18,8 @@ package com.epam.digital.data.platform.dgtldcmnt.validator;
 
 import com.epam.digital.data.platform.dgtldcmnt.constant.DocumentConstants;
 import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentDto;
+import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import javax.validation.ConstraintValidatorContext;
 import javax.validation.ConstraintValidatorContext.ConstraintViolationBuilder;
 import javax.validation.ConstraintValidatorContext.ConstraintViolationBuilder.NodeBuilderCustomizableContext;
@@ -43,7 +43,7 @@ class AllowedUploadedDocumentValidatorTest {
   @Mock
   Tika tika;
   @Mock
-  InputStream inputStream;
+  BufferedInputStream inputStream;
   @Mock
   ConstraintValidatorContext context;
   @Mock

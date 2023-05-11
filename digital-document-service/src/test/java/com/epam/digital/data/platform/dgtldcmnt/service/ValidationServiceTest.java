@@ -22,7 +22,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
-import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentDto;
+import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentFromUserFormDto;
+import com.epam.digital.data.platform.dgtldcmnt.exception.BatchFileMaxSizeException;
 import com.epam.digital.data.platform.integration.formprovider.client.FormValidationClient;
 import com.epam.digital.data.platform.integration.formprovider.dto.FileDataValidationDto;
 import com.epam.digital.data.platform.integration.formprovider.exception.SubmissionValidationException;
@@ -31,7 +32,7 @@ import com.epam.digital.data.platform.starter.errorhandling.dto.ErrorsListDto;
 import com.epam.digital.data.platform.starter.errorhandling.dto.ValidationErrorDto;
 import com.epam.digital.data.platform.starter.errorhandling.exception.ValidationException;
 import com.epam.digital.data.platform.storage.file.dto.FileMetadataDto;
-import com.epam.digital.data.platform.storage.file.repository.FormDataFileRepository;
+import com.epam.digital.data.platform.storage.file.service.FormDataFileStorageService;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,6 +40,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.util.unit.DataSize;
 
 @ExtendWith(MockitoExtension.class)
 class ValidationServiceTest {
@@ -49,24 +51,24 @@ class ValidationServiceTest {
   private final String filePattern = "application/pdf";
   private final String formKey = "formKey";
   private final Long size = 1000L;
-  private final Double maxBatchFilesSize = 100.0;
 
+  private final DataSize maxBatchFilesSize = DataSize.ofMegabytes(100);
   @Mock
   private FormValidationClient formValidationClient;
   @Mock
-  private FormDataFileRepository formDataFileRepository;
+  private FormDataFileStorageService formDataFileStorageService;
 
   private ValidationService validationService;
 
   @BeforeEach
   public void init() {
-    validationService = new ValidationService(formValidationClient, formDataFileRepository);
-    validationService.setMaxBatchFileSize(maxBatchFilesSize);
+    validationService = new ValidationService(maxBatchFilesSize, formValidationClient,
+        formDataFileStorageService);
   }
 
   @Test
   void shouldValidate() {
-    var uploadDto = UploadDocumentDto.builder()
+    var uploadDto = UploadDocumentFromUserFormDto.builder()
         .processInstanceId(processInstanceId)
         .contentType(filePattern)
         .fieldName(fieldName)
@@ -78,14 +80,14 @@ class ValidationServiceTest {
         "formKey", formKey,
         "fieldName", fieldName
     ));
-    when(formDataFileRepository.getMetadata(processInstanceId)).thenReturn(List.of(metadata));
+    when(formDataFileStorageService.getMetadata(processInstanceId)).thenReturn(List.of(metadata));
 
     validationService.validate(uploadDto);
   }
 
   @Test
   void shouldNotValidateBatchFileSizeExceedsMaxBatchFileSize() {
-    var uploadDto = UploadDocumentDto.builder()
+    var uploadDto = UploadDocumentFromUserFormDto.builder()
         .processInstanceId(processInstanceId)
         .contentType(filePattern)
         .fieldName(fieldName)
@@ -97,20 +99,21 @@ class ValidationServiceTest {
         "formKey", formKey,
         "fieldName", fieldName
     ));
-    when(formDataFileRepository.getMetadata(processInstanceId)).thenReturn(List.of(metadata));
+    when(formDataFileStorageService.getMetadata(processInstanceId)).thenReturn(List.of(metadata));
 
-    var exception = assertThrows(ValidationException.class,
+    var exception = assertThrows(BatchFileMaxSizeException.class,
         () -> validationService.validate(uploadDto));
 
     assertThat(exception.getMessage()).isEqualTo(
-        String.format(TOTAL_FILES_SIZE_EXCEEDS_MAX_BATCH_FILES_SIZE_MSG, maxBatchFilesSize));
+        String.format(TOTAL_FILES_SIZE_EXCEEDS_MAX_BATCH_FILES_SIZE_MSG,
+            maxBatchFilesSize.toMegabytes()));
   }
 
   @Test
   void shouldNotValidateDocumentTypeNotSupported() {
     var unsupportedContentType = "image/png";
     var errorMessage = "The type of the downloaded file is not supported.";
-    var uploadDto = UploadDocumentDto.builder()
+    var uploadDto = UploadDocumentFromUserFormDto.builder()
         .processInstanceId(processInstanceId)
         .contentType(unsupportedContentType)
         .fieldName(fieldName)
@@ -127,7 +130,8 @@ class ValidationServiceTest {
         .build();
 
     doThrow(new SubmissionValidationException(
-        ValidationErrorDto.builder().code("VALIDATION_ERROR").message(errorMessage).traceId("traceId")
+        ValidationErrorDto.builder().code("VALIDATION_ERROR").message(errorMessage)
+            .traceId("traceId")
             .details(new ErrorsListDto(List.of(new ErrorDetailDto()))).build()))
         .when(formValidationClient)
         .validateFileField("formKey", fieldName, formValidationDto);

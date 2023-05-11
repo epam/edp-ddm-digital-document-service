@@ -11,7 +11,7 @@ global:
       container:
         resources: {}
         envVars: {}
-
+  deploymentMode: production
 
 podAnnotations: {}
 image:
@@ -49,4 +49,6 @@ keycloak:
     admin: admin
   certificatesEndpoint: /protocol/openid-connect/certs
 
-deployProfile: prod
+digitalDocuments:
+  maxFileSize: 100MB
+  maxTotalFileSize: 100MB

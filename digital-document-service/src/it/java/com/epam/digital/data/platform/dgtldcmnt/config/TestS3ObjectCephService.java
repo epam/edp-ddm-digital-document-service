@@ -40,11 +40,12 @@ public class TestS3ObjectCephService implements CephService {
   private final Map<String, S3Object> storage = new HashMap<>();
 
   @Override
+  @SneakyThrows
   public CephObjectMetadata put(String cephBucketName, String key, String contentType,
       Map<String, String> userMetadata, InputStream fileInputStream) {
     ObjectMetadata objectMetadata = new ObjectMetadata();
     objectMetadata.setContentType(contentType);
-    objectMetadata.setContentLength(1000L);
+    objectMetadata.setContentLength(fileInputStream.available());
     objectMetadata.setUserMetadata(userMetadata);
     S3Object s3Object = new S3Object();
     s3Object.setObjectContent(fileInputStream);
@@ -110,8 +111,9 @@ public class TestS3ObjectCephService implements CephService {
   @Override
   public CephObjectMetadata setUserMetadata(String cephBucketName, String key,
       Map<String, String> userMetadata) {
-    S3Object s3Object = new S3Object();
-    ObjectMetadata objectMetadata = new ObjectMetadata();
+    var s3Object = storage.containsKey(key) ? storage.get(key) : new S3Object();
+    ObjectMetadata objectMetadata = Objects.isNull(s3Object.getObjectMetadata()) ? new ObjectMetadata()
+            : s3Object.getObjectMetadata();
     objectMetadata.setUserMetadata(userMetadata);
     s3Object.setObjectMetadata(objectMetadata);
     storage.put(key, s3Object);

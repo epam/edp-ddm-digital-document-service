@@ -29,7 +29,7 @@ import com.epam.digital.data.platform.dgtldcmnt.BaseIT;
 import com.epam.digital.data.platform.dgtldcmnt.dto.DocumentIdDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.DocumentMetadataDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.DocumentMetadataSearchRequestDto;
-import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentDto;
+import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentFromUserFormDto;
 import com.epam.digital.data.platform.starter.security.jwt.JwtAuthenticationFilter;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.tomakehurst.wiremock.client.WireMock;
@@ -54,11 +54,10 @@ class DocumentControllerIT extends BaseIT {
   private final String fieldName = "testUpload1";
   private final String formKey = "upload-test";
   private final byte[] data = new byte[]{1};
-  private String assignee;
 
   @BeforeEach
   public void init() {
-    assignee = tokenParser.parseClaims(accessToken).getPreferredUsername();
+    String assignee = tokenParser.parseClaims(accessToken).getPreferredUsername();
     mockBpmsGetTaskById(taskId, assignee, processInstanceId, formKey);
     mockCheckFieldNames(formKey);
     mockFormProviderGetFormMetadata(formKey, fieldName,
@@ -73,7 +72,7 @@ class DocumentControllerIT extends BaseIT {
     assertThat(response).isNotNull();
     assertThat(response.getName()).isEqualTo(filename);
     assertThat(response.getType()).isEqualTo(contentType);
-    assertThat(response.getSize()).isEqualTo(1000L);
+    assertThat(response.getSize()).isEqualTo(1L);
     assertThat(response.getId()).isNotNull();
     assertThat(response.getChecksum()).isEqualTo(DigestUtils.sha256Hex(data));
     var expectedUrl = UriComponentsBuilder.newInstance().scheme("https").host(host)
@@ -98,7 +97,7 @@ class DocumentControllerIT extends BaseIT {
     assertThat(response).isNotNull();
     assertThat(response.getName()).isEqualTo(filename);
     assertThat(response.getType()).isEqualTo(contentType);
-    assertThat(response.getSize()).isEqualTo(1000L);
+    assertThat(response.getSize()).isEqualTo(1L);
     assertThat(response.getId()).isNotNull();
     assertThat(response.getChecksum()).isEqualTo(DigestUtils.sha256Hex(data));
     var expectedUrl = UriComponentsBuilder.newInstance().scheme("https").host(host)
@@ -241,7 +240,7 @@ class DocumentControllerIT extends BaseIT {
 
   @SneakyThrows
   private DocumentMetadataDto uploadFile(String filename, String contentType, byte[] data,
-      UploadDocumentDto contextDto) {
+      UploadDocumentFromUserFormDto contextDto) {
 
     var url = UriComponentsBuilder.newInstance().pathSegment("documents")
         .pathSegment(contextDto.getProcessInstanceId())
@@ -260,8 +259,8 @@ class DocumentControllerIT extends BaseIT {
     return getPayloadFromJSON(responseAsStr, DocumentMetadataDto.class);
   }
 
-  private UploadDocumentDto createDocumentContextDto() {
-    return UploadDocumentDto.builder()
+  private UploadDocumentFromUserFormDto createDocumentContextDto() {
+    return UploadDocumentFromUserFormDto.builder()
         .processInstanceId(processInstanceId)
         .fieldName(fieldName)
         .taskId(taskId)

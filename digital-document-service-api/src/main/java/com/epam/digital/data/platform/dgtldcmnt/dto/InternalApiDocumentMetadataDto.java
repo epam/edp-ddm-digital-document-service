@@ -16,21 +16,23 @@
 
 package com.epam.digital.data.platform.dgtldcmnt.dto;
 
-import java.io.InputStream;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
-/**
- * It contains document input stream and describes a file metadata and a context with which the
- * document should be uploaded
- */
 @Data
 @Builder
-public class UploadRemoteDocumentDto {
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonInclude(Include.NON_NULL)
+public class InternalApiDocumentMetadataDto {
 
-  private String filename;
-  private String contentType;
-  private long contentLength;
-  private InputStream inputStream;
-  private String processInstanceId;
+  private String id;
+  private String name;
+  private String type;
+  private String checksum;
+  private long size;
 }

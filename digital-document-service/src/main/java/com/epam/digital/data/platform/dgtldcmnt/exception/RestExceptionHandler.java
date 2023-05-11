@@ -45,6 +45,10 @@ public class RestExceptionHandler {
   @Value("${spring.servlet.multipart.max-request-size}")
   private DataSize maxRequestSize;
 
+  private static final String FILE_SIZE_IS_TOO_LARGE_CODE = "FILE_SIZE_IS_TOO_LARGE";
+  private static final String BATCH_FILE_SIZE_IS_TOO_LARGE_CODE = "BATCH_FILE_SIZE_IS_TOO_LARGE";
+
+
   /**
    * It handles base spring-validation/servlet 'bad request' exceptions and wraps it into
    * {@link SystemErrorDto}.
@@ -119,14 +123,27 @@ public class RestExceptionHandler {
   }
 
   @ExceptionHandler(MaxUploadSizeExceededException.class)
-  public ResponseEntity<SystemErrorDto> handleMaxFileSizeExceeded(MaxUploadSizeExceededException ex) {
+  public ResponseEntity<SystemErrorDto> handleMaxFileSizeExceeded(
+      MaxUploadSizeExceededException ex) {
     var error = SystemErrorDto.builder()
-            .traceId(MDC.get(BaseRestExceptionHandler.TRACE_ID_KEY))
-            .code(String.valueOf(HttpStatus.UNPROCESSABLE_ENTITY.value()))
-            .message(String.format("The total size of the uploaded files exceeds %sMB", maxRequestSize.toMegabytes()))
-            .build();
-    log.error("Max upload file size is exceeded", ex);
-    return new ResponseEntity<>(error, HttpStatus.UNPROCESSABLE_ENTITY);
+        .traceId(MDC.get(BaseRestExceptionHandler.TRACE_ID_KEY))
+        .code(FILE_SIZE_IS_TOO_LARGE_CODE)
+        .message(String.format("The size of the uploaded file exceeds %sMB", maxRequestSize.toMegabytes()))
+        .build();
+    log.error("File size is too large", ex);
+    return new ResponseEntity<>(error, HttpStatus.PAYLOAD_TOO_LARGE);
+  }
+
+  @ExceptionHandler(BatchFileMaxSizeException.class)
+  public ResponseEntity<SystemErrorDto> handleBatchFileMaxSizeException(
+      BatchFileMaxSizeException ex) {
+    var error = SystemErrorDto.builder()
+        .traceId(MDC.get(BaseRestExceptionHandler.TRACE_ID_KEY))
+        .code(BATCH_FILE_SIZE_IS_TOO_LARGE_CODE)
+        .message(ex.getMessage())
+        .build();
+    log.error("Total file size is too large", ex);
+    return new ResponseEntity<>(error, HttpStatus.PAYLOAD_TOO_LARGE);
   }
 
   private Annotation getAnnotationFromConstraintViolationException(

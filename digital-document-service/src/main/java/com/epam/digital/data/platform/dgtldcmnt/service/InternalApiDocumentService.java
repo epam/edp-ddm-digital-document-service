@@ -17,11 +17,14 @@
 package com.epam.digital.data.platform.dgtldcmnt.service;
 
 import com.epam.digital.data.platform.dgtldcmnt.dto.RemoteDocumentMetadataDto;
-import com.epam.digital.data.platform.dgtldcmnt.dto.UploadRemoteDocumentDto;
+import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentDto;
+import com.epam.digital.data.platform.dgtldcmnt.validator.AllowedUploadedDocument;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * The service for management of the documents.
  */
+@Validated
 public interface InternalApiDocumentService {
 
   /**
@@ -34,5 +37,5 @@ public interface InternalApiDocumentService {
    *
    * @param documentDto contains file input stream, metadata, and document context info.
    */
-  RemoteDocumentMetadataDto put(UploadRemoteDocumentDto documentDto);
+  RemoteDocumentMetadataDto put(@AllowedUploadedDocument UploadDocumentDto documentDto);
 }

@@ -57,7 +57,8 @@ public class AllowedUploadedDocumentValidator implements
 
   private boolean isFilenameExtensionValid(UploadDocumentDto uploadDocumentDto,
       ConstraintValidatorContext context) {
-    log.debug("Validating filename extension for task '{}'", uploadDocumentDto.getTaskId());
+    log.debug("Validating filename extension for process-instance '{}'",
+        uploadDocumentDto.getProcessInstanceId());
     final var contentType = uploadDocumentDto.getContentType();
     var acceptedExtensions = getAcceptedExtensions(contentType);
 
@@ -98,7 +99,8 @@ public class AllowedUploadedDocumentValidator implements
 
   private boolean isDetectedFileContentTypeEqualsToInputContentType(
       UploadDocumentDto uploadDocumentDto, ConstraintValidatorContext context) {
-    log.debug("Validating file content type for task '{}'", uploadDocumentDto.getTaskId());
+    log.debug("Validating file content type for process-instance '{}'",
+        uploadDocumentDto.getProcessInstanceId());
     final var filename = uploadDocumentDto.getFilename();
     final var inputFile = uploadDocumentDto.getFileInputStream();
     final String fileContentType;
@@ -141,13 +143,12 @@ public class AllowedUploadedDocumentValidator implements
 
   @Override
   public boolean isValid(UploadDocumentDto value, ConstraintValidatorContext context) {
-    log.debug("Validating input document. Process-instance - '{}'. Task - '{}'. Form - '{}'. "
-            + "Field - '{}'. Validation enabled - '{}'",
-        value.getProcessInstanceId(), value.getTaskId(), value.getFormKey(), value.getFilename(),
-        mediaTypeValidationEnabled);
+    log.debug("Validating input document. Process-instance - '{}'. Validation enabled - '{}'",
+        value.getProcessInstanceId(), mediaTypeValidationEnabled);
     var isValid = !mediaTypeValidationEnabled || (isFilenameExtensionValid(value, context)
         && isDetectedFileContentTypeEqualsToInputContentType(value, context));
-    log.debug("Input document for task '{}' is valid - '{}'.", value.getTaskId(), isValid);
+    log.debug("Input document for process '{}' is valid - '{}'.", value.getProcessInstanceId(),
+        isValid);
     return isValid;
   }
 }
