@@ -21,27 +21,29 @@ import com.epam.digital.data.platform.dgtldcmnt.dto.DocumentIdDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.DocumentMetadataDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.GetDocumentDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.GetDocumentsMetadataDto;
-import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentDto;
-import com.epam.digital.data.platform.starter.logger.annotation.Confidential;
+import com.epam.digital.data.platform.dgtldcmnt.dto.InternalApiDocumentMetadataDto;
+import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentFromUserFormDto;
+import com.epam.digital.data.platform.dgtldcmnt.mapper.DocumentMetadataDtoMapper;
 import com.epam.digital.data.platform.storage.file.dto.FileDataDto;
 import com.epam.digital.data.platform.storage.file.dto.FileMetadataDto;
 import com.epam.digital.data.platform.storage.file.service.FormDataFileStorageService;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 
 /**
@@ -53,9 +55,10 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class CephDocumentService implements DocumentService {
 
   private final FormDataFileStorageService storage;
+  private final DocumentMetadataDtoMapper mapper;
 
   @Override
-  public DocumentMetadataDto put(UploadDocumentDto uploadDocumentDto) {
+  public DocumentMetadataDto put(UploadDocumentFromUserFormDto uploadDocumentDto) {
     var id = UUID.randomUUID().toString();
     log.debug("Uploading file {}, id {}, processInstanceId {}, taskId {}",
         uploadDocumentDto.getFilename(), id, uploadDocumentDto.getProcessInstanceId(),
@@ -79,7 +82,6 @@ public class CephDocumentService implements DocumentService {
   }
 
   @Override
-  @Confidential
   public DocumentDto get(GetDocumentDto getDocumentDto) {
     log.debug("Getting document with id {}", getDocumentDto.getId());
     var fileData = storage.loadByProcessInstanceIdAndId(getDocumentDto.getProcessInstanceId(),
@@ -107,6 +109,17 @@ public class CephDocumentService implements DocumentService {
   }
 
   @Override
+  public InternalApiDocumentMetadataDto getMetadata(String processInstanceId, String documentId) {
+    log.debug("Getting document metadata by id {}", documentId);
+    var result = storage.getMetadata(processInstanceId, Set.of(documentId))
+        .stream()
+        .map(mapper::toInternalApiDocumentMetadataDto)
+        .collect(Collectors.toList());
+    log.debug("Document metadata by id {} received", documentId);
+    return CollectionUtils.firstElement(result);
+  }
+
+  @Override
   public void delete(String processInstanceId) {
     log.debug("Deleting all documents associated with process instance id {}", processInstanceId);
     storage.deleteByProcessInstanceId(processInstanceId);
@@ -116,7 +129,8 @@ public class CephDocumentService implements DocumentService {
 
   @Override
   public void delete(String processInstanceId, String fileId) {
-    log.debug("Deleting document associated with process instance id {} and id {}", processInstanceId, fileId);
+    log.debug("Deleting document associated with process instance id {} and id {}",
+        processInstanceId, fileId);
     storage.deleteByProcessInstanceIdAndId(processInstanceId, fileId);
     log.debug("Document associated with process instance id {} and id {} was deleted successfully",
         processInstanceId, fileId);
@@ -128,14 +142,7 @@ public class CephDocumentService implements DocumentService {
     var url = generateGetDocumentUrl(getMetadataDto.getOriginRequestUrl(),
         getMetadataDto.getProcessInstanceId(), getMetadataDto.getTaskId(),
         documentIdAndFiledNameMap.get(id), id);
-    return DocumentMetadataDto.builder()
-        .name(decodeUtf8(fileMetadataDto.getFilename()))
-        .size(fileMetadataDto.getContentLength())
-        .checksum(fileMetadataDto.getChecksum())
-        .type(fileMetadataDto.getContentType())
-        .url(url)
-        .id(id)
-        .build();
+    return mapper.toDocumentMetadataDto(fileMetadataDto, url);
   }
 
   private String generateGetDocumentUrl(String host, String processInstanceId,
@@ -148,7 +155,8 @@ public class CephDocumentService implements DocumentService {
         .toUriString();
   }
 
-  private String generateGetDocumentUrl(String fileId, UploadDocumentDto uploadDocumentDto) {
+  private String generateGetDocumentUrl(String fileId,
+      UploadDocumentFromUserFormDto uploadDocumentDto) {
     return this.generateGetDocumentUrl(uploadDocumentDto.getOriginRequestUrl(),
         uploadDocumentDto.getProcessInstanceId(), uploadDocumentDto.getTaskId(),
         uploadDocumentDto.getFieldName(), fileId);
@@ -163,11 +171,7 @@ public class CephDocumentService implements DocumentService {
   }
 
   private String encodeUtf8(String value) {
-    try {
-      return URLEncoder.encode(value, StandardCharsets.UTF_8.name());
-    } catch (UnsupportedEncodingException e) {
-      throw new IllegalArgumentException("Unable to encode value", e);
-    }
+    return URLEncoder.encode(value, StandardCharsets.UTF_8);
   }
 
   private String decodeUtf8(String value) {
@@ -177,7 +181,7 @@ public class CephDocumentService implements DocumentService {
   }
 
   private FileMetadataDto buildFileMetadata(String id, String checksum,
-      UploadDocumentDto uploadDocumentDto) {
+      UploadDocumentFromUserFormDto uploadDocumentDto) {
     return FileMetadataDto.builder()
         .filename(encodeUtf8(uploadDocumentDto.getFilename()))
         .contentType(uploadDocumentDto.getContentType())

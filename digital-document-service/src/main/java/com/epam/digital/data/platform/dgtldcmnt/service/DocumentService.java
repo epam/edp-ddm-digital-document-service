@@ -20,7 +20,8 @@ import com.epam.digital.data.platform.dgtldcmnt.dto.DocumentDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.DocumentMetadataDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.GetDocumentDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.GetDocumentsMetadataDto;
-import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentDto;
+import com.epam.digital.data.platform.dgtldcmnt.dto.InternalApiDocumentMetadataDto;
+import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentFromUserFormDto;
 import com.epam.digital.data.platform.storage.file.exception.FileNotFoundException;
 import java.io.InputStream;
 import java.util.List;
@@ -38,7 +39,7 @@ public interface DocumentService {
    * @param uploadDocumentDto contains file input stream, metadata, and document context info.
    * @return {@link FileNotFoundException} of the saved document.
    */
-  DocumentMetadataDto put(UploadDocumentDto uploadDocumentDto);
+  DocumentMetadataDto put(UploadDocumentFromUserFormDto uploadDocumentDto);
 
   /**
    * Get document from storage by key. It returns document representation with document name,
@@ -46,6 +47,7 @@ public interface DocumentService {
    *
    * @param getDocumentDto contains document id and the document context info.
    * @return document representation.
+   *
    * @throws FileNotFoundException if document not exist.
    */
   DocumentDto get(GetDocumentDto getDocumentDto);
@@ -55,9 +57,21 @@ public interface DocumentService {
    *
    * @param getMetadataDto contains document ids and a context of the documents.
    * @return list of documents metadata.
+   *
    * @throws FileNotFoundException if at least one document not exist in provided ids list.
    */
   List<DocumentMetadataDto> getMetadata(GetDocumentsMetadataDto getMetadataDto);
+
+  /**
+   * Get document metadata by id.
+   *
+   * @param processInstanceId id of a process-instance document has been stored in
+   * @param documentId        id of a document to get metadata
+   * @return documents metadata.
+   *
+   * @throws FileNotFoundException if a document not exist.
+   */
+  InternalApiDocumentMetadataDto getMetadata(String processInstanceId, String documentId);
 
   /**
    * Delete all documents associated with provided process instance id
@@ -70,7 +84,7 @@ public interface DocumentService {
    * Delete document associated with provided process instance id and file id
    *
    * @param processInstanceId specified process instance id
-   * @param fileId specified file id
+   * @param fileId            specified file id
    */
   void delete(String processInstanceId, String fileId);
 }

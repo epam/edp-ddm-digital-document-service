@@ -26,11 +26,13 @@ import com.epam.digital.data.platform.dgtldcmnt.dto.DocumentDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.DocumentIdDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.GetDocumentDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.GetDocumentsMetadataDto;
-import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentDto;
+import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentFromUserFormDto;
+import com.epam.digital.data.platform.dgtldcmnt.mapper.DocumentMetadataDtoMapper;
 import com.epam.digital.data.platform.storage.file.dto.FileDataDto;
 import com.epam.digital.data.platform.storage.file.dto.FileMetadataDto;
 import com.epam.digital.data.platform.storage.file.exception.FileNotFoundException;
 import com.epam.digital.data.platform.storage.file.service.FormDataFileStorageService;
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.List;
@@ -38,8 +40,10 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -48,6 +52,8 @@ class CephDocumentServiceTest {
 
   @Mock
   private FormDataFileStorageService fromDataFileStorageService;
+  @Spy
+  private DocumentMetadataDtoMapper mapper = Mappers.getMapper(DocumentMetadataDtoMapper.class);
 
   private DocumentService service;
 
@@ -63,17 +69,17 @@ class CephDocumentServiceTest {
 
   @BeforeEach
   public void init() {
-    service = new CephDocumentService(fromDataFileStorageService);
+    service = new CephDocumentService(fromDataFileStorageService, mapper);
   }
 
   @Test
   void testPutDocument() {
-    var is = new ByteArrayInputStream(data);
+    var is = new BufferedInputStream(new ByteArrayInputStream(data));
     var testObjectMetaData = FileMetadataDto.builder()
         .contentLength(contentLength)
         .contentType(contentType)
         .build();
-    var uploadDto = UploadDocumentDto.builder()
+    var uploadDto = UploadDocumentFromUserFormDto.builder()
         .processInstanceId(processInstanceId)
         .originRequestUrl(originRequestUrl)
         .contentType(contentType)
@@ -170,6 +176,22 @@ class CephDocumentServiceTest {
     assertThat(metadata.size()).isOne();
     assertThat(metadata.get(0).getType()).isEqualTo(contentType);
     assertThat(metadata.get(0).getSize()).isEqualTo(contentLength);
+  }
+
+  @Test
+  void testGetMetadataById() {
+    var fileMetadata = FileMetadataDto.builder()
+        .contentLength(contentLength)
+        .contentType(contentType)
+        .filename("test.pdf")
+        .build();
+
+    when(fromDataFileStorageService.getMetadata(processInstanceId, Set.of(key))).thenReturn(
+        List.of(fileMetadata));
+
+    var metadata = service.getMetadata(processInstanceId, key);
+    assertThat(metadata.getType()).isEqualTo(contentType);
+    assertThat(metadata.getSize()).isEqualTo(contentLength);
   }
 
   @Test

@@ -23,7 +23,8 @@ import com.epam.digital.data.platform.dgtldcmnt.dto.DocumentIdDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.DocumentMetadataDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.GetDocumentDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.GetDocumentsMetadataDto;
-import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentDto;
+import com.epam.digital.data.platform.dgtldcmnt.dto.InternalApiDocumentMetadataDto;
+import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentFromUserFormDto;
 import com.epam.digital.data.platform.dgtldcmnt.service.AuthorizationService;
 import com.epam.digital.data.platform.dgtldcmnt.service.DocumentService;
 import com.epam.digital.data.platform.dgtldcmnt.service.ValidationService;
@@ -57,7 +58,8 @@ public class DocumentFacade {
    * @param authentication    object with authentication data.
    * @return {@link DocumentMetadataDto} of the saved document.
    */
-  public DocumentMetadataDto put(@AllowedUploadedDocument UploadDocumentDto uploadDocumentDto,
+  public DocumentMetadataDto validateAndPut(
+      @AllowedUploadedDocument UploadDocumentFromUserFormDto uploadDocumentDto,
       Authentication authentication) {
     var taskId = uploadDocumentDto.getTaskId();
     var processInstanceId = uploadDocumentDto.getProcessInstanceId();
@@ -86,7 +88,7 @@ public class DocumentFacade {
    * @param authentication object with authentication data.
    * @return document representation.
    */
-  public DocumentDto get(GetDocumentDto getDocumentDto, Authentication authentication) {
+  public DocumentDto validateAndGet(GetDocumentDto getDocumentDto, Authentication authentication) {
     var taskId = getDocumentDto.getTaskId();
     var processInstanceId = getDocumentDto.getProcessInstanceId();
     var fieldName = getDocumentDto.getFieldName();
@@ -125,6 +127,21 @@ public class DocumentFacade {
   }
 
   /**
+   * Get document metadata by id.
+   *
+   * @param processInstanceId id of a process-instance document has been stored in
+   * @param documentId        id of a document to get metadata
+   * @return list of documents metadata.
+   */
+  public InternalApiDocumentMetadataDto getMetadata(String processInstanceId, String documentId) {
+    log.info("Getting file {} metadata in process {}", documentId, processInstanceId);
+
+    var result = documentService.getMetadata(processInstanceId, documentId);
+    log.info("File {} metadata has been downloaded", documentId);
+    return result;
+  }
+
+  /**
    * Delete all documents associated with provided process instance id
    *
    * @param processInstanceId specified process instance id
@@ -148,6 +165,38 @@ public class DocumentFacade {
     authorize(processInstanceId, taskId, List.of(fieldName), authentication);
     documentService.delete(processInstanceId, deleteDocumentDto.getId());
     log.info("File {} for task {} has been deleted", fieldName, taskId);
+  }
+
+  /**
+   * Put document to storage.
+   *
+   * @param uploadDocumentDto contains file input stream, metadata, and document context info.
+   * @return {@link InternalApiDocumentMetadataDto} of the saved document.
+   */
+  public InternalApiDocumentMetadataDto put(
+      @AllowedUploadedDocument UploadDocumentFromUserFormDto uploadDocumentDto) {
+    var processInstanceId = uploadDocumentDto.getProcessInstanceId();
+    log.info("Uploading file by processInstanceId: {}", processInstanceId);
+    var documentMetadata = documentService.put(uploadDocumentDto);
+    log.info("File has been uploaded by processInstanceId: {}", processInstanceId);
+    return InternalApiDocumentMetadataDto.builder()
+        .id(documentMetadata.getId())
+        .size(documentMetadata.getSize())
+        .type(documentMetadata.getType())
+        .name(documentMetadata.getName())
+        .checksum(documentMetadata.getChecksum())
+        .build();
+  }
+
+  /**
+   * Get document from storage by id.
+   *
+   * @param getDocumentDto contains document id and context of the document.
+   * @return document representation.
+   */
+  public DocumentDto get(GetDocumentDto getDocumentDto) {
+    log.info("Downloading file with processInstanceId: {}", getDocumentDto.getProcessInstanceId());
+    return documentService.get(getDocumentDto);
   }
 
   private void authorize(String processInstance, String taskId, List<String> filedNames,

@@ -21,7 +21,7 @@ import com.epam.digital.data.platform.dgtldcmnt.dto.DocumentMetadataDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.DocumentMetadataSearchRequestDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.GetDocumentDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.GetDocumentsMetadataDto;
-import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentDto;
+import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentFromUserFormDto;
 import com.epam.digital.data.platform.dgtldcmnt.facade.DocumentFacade;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -59,7 +59,7 @@ public class DocumentController {
 
   public static final String X_FORWARDED_HOST_HEADER = "x-forwarded-host";
 
-  @Value("${digital-document-service.content.disposition-type}")
+  @Value("${digital-documents.content.disposition-type}")
   private final String contentDispositionType;
   private final DocumentFacade documentFacade;
 
@@ -88,7 +88,7 @@ public class DocumentController {
       @RequestParam("file") MultipartFile file,
       @RequestParam(required = false, name = "filename") String filename,
       Authentication authentication) throws IOException {
-    var uploadDocumentDto = UploadDocumentDto.builder()
+    var uploadDocumentDto = UploadDocumentFromUserFormDto.builder()
         .filename(Objects.isNull(filename) ? file.getOriginalFilename() : filename)
         .fileInputStream(new BufferedInputStream(file.getInputStream()))
         .contentType(file.getContentType())
@@ -98,7 +98,7 @@ public class DocumentController {
         .size(file.getSize())
         .taskId(taskId)
         .build();
-    return documentFacade.put(uploadDocumentDto, authentication);
+    return documentFacade.validateAndPut(uploadDocumentDto, authentication);
   }
 
   /**
@@ -125,7 +125,7 @@ public class DocumentController {
         .taskId(taskId)
         .id(id)
         .build();
-    var documentDto = documentFacade.get(getDocumentDto, authentication);
+    var documentDto = documentFacade.validateAndGet(getDocumentDto, authentication);
     var contentDisposition = ContentDisposition.builder(contentDispositionType)
         .filename(documentDto.getName()).build();
     var headers = new HttpHeaders();

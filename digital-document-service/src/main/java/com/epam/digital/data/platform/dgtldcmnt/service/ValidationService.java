@@ -16,47 +16,44 @@
 
 package com.epam.digital.data.platform.dgtldcmnt.service;
 
-import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentDto;
+import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentFromUserFormDto;
+import com.epam.digital.data.platform.dgtldcmnt.exception.BatchFileMaxSizeException;
 import com.epam.digital.data.platform.integration.formprovider.client.FormValidationClient;
 import com.epam.digital.data.platform.integration.formprovider.dto.FileDataValidationDto;
 import com.epam.digital.data.platform.integration.formprovider.dto.FormFieldListValidationDto;
 import com.epam.digital.data.platform.integration.formprovider.exception.SubmissionValidationException;
-import com.epam.digital.data.platform.starter.errorhandling.BaseRestExceptionHandler;
-import com.epam.digital.data.platform.starter.errorhandling.dto.ValidationErrorDto;
 import com.epam.digital.data.platform.starter.errorhandling.exception.ValidationException;
-import com.epam.digital.data.platform.storage.file.repository.FormDataFileRepository;
+import com.epam.digital.data.platform.storage.file.dto.FileMetadataDto;
+import com.epam.digital.data.platform.storage.file.service.FormDataFileStorageService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
+import org.springframework.util.unit.DataSize;
 
 /**
  * Validation service that validates the document metadata based on the form metadata.
  */
 @Slf4j
-@Setter
 @Component
 @RequiredArgsConstructor
 public class ValidationService {
 
   public static final String TOTAL_FILES_SIZE_EXCEEDS_MAX_BATCH_FILES_SIZE_MSG = "The total size of the downloaded files exceeds %sMB";
 
-  @Value("${digital-document-service.max-batch-file-size-mb}")
-  private Double maxBatchFileSize;
+  @Value("${digital-documents.max-total-file-size:100MB}")
+  private final DataSize maxBatchFileSize;
   private final FormValidationClient formValidationClient;
-  private final FormDataFileRepository formDataFileRepository;
+  private final FormDataFileStorageService formDataFileStorageService;
 
   /**
    * Validate the uploaded document metadata based on the ui form metadata.
    *
    * @param uploadDto contains uploaded document metadata.
    */
-  public void validate(UploadDocumentDto uploadDto) {
+  public void validate(UploadDocumentFromUserFormDto uploadDto) {
     log.debug("Validating file {} in task {} in form {}", uploadDto.getFieldName(),
         uploadDto.getTaskId(), uploadDto.getFormKey());
     var fileData = FileDataValidationDto.builder()
@@ -84,29 +81,18 @@ public class ValidationService {
     }
   }
 
-  public void verifyTotalFilesSize(UploadDocumentDto uploadDto) {
-    var metadata = formDataFileRepository.getMetadata(uploadDto.getProcessInstanceId());
+  public void verifyTotalFilesSize(UploadDocumentFromUserFormDto uploadDto) {
+    var metadata = formDataFileStorageService.getMetadata(uploadDto.getProcessInstanceId());
     var otherFilesSize = metadata.stream()
         .filter(md -> uploadDto.getFormKey().equals(md.getFormKey()) &&
             uploadDto.getFieldName().equals(md.getFieldName()))
-        .mapToDouble(md -> getMBSize(md.getContentLength())).sum();
-    var currentFileSize = getMBSize(uploadDto.getSize());
-    if (currentFileSize + otherFilesSize > maxBatchFileSize) {
-      throw createValidationException(
-          String.format(TOTAL_FILES_SIZE_EXCEEDS_MAX_BATCH_FILES_SIZE_MSG, maxBatchFileSize));
+        .mapToDouble(FileMetadataDto::getContentLength)
+        .sum();
+    var currentFileSize = uploadDto.getSize();
+    if (currentFileSize + otherFilesSize > maxBatchFileSize.toBytes()) {
+      throw new BatchFileMaxSizeException(
+          String.format(TOTAL_FILES_SIZE_EXCEEDS_MAX_BATCH_FILES_SIZE_MSG,
+              maxBatchFileSize.toMegabytes()));
     }
-  }
-
-  private double getMBSize(Long size) {
-    return (double) size / (1024 * 1024);
-  }
-
-  private ValidationException createValidationException(String msg) {
-    var error = ValidationErrorDto.builder()
-        .traceId(MDC.get(BaseRestExceptionHandler.TRACE_ID_KEY))
-        .code(String.valueOf(HttpStatus.UNPROCESSABLE_ENTITY.value()))
-        .message(msg)
-        .build();
-    return new ValidationException(error);
   }
 }

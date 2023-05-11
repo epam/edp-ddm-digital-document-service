@@ -16,29 +16,41 @@
 
 package com.epam.digital.data.platform.dgtldcmnt.dto;
 
-import java.io.BufferedInputStream;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 /**
- * It contains document input stream and describes a file metadata with which the
- * document should be uploaded
+ * Child of {@link UploadDocumentDto} that also contains a context with which the document should be uploaded
  */
 @Data
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UploadDocumentDto {
-
-  private long size;
-  private String filename;
-  private String contentType;
-  private BufferedInputStream fileInputStream;
+@EqualsAndHashCode(callSuper = true)
+public class UploadDocumentFromUserFormDto extends UploadDocumentDto {
 
   /**
-   * The process instance id to whom the document belongs to. It is used for authorization.
+   * The task id that has ui form and filedName under which document is loaded. It is used for
+   * authorization.
    */
-  private String processInstanceId;
+  private String taskId;
+
+  /**
+   * The field name on ui form under which document is loaded. It is used for validation.
+   */
+  private String fieldName;
+
+  /**
+   * The key of ui form in which document is loaded.
+   */
+  private String formKey;
+
+  /**
+   * The origin forwarded request url.
+   */
+  private String originRequestUrl;
+
 }

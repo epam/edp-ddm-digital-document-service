@@ -17,7 +17,7 @@
 package com.epam.digital.data.platform.dgtldcmnt.service;
 
 import com.epam.digital.data.platform.dgtldcmnt.dto.RemoteDocumentMetadataDto;
-import com.epam.digital.data.platform.dgtldcmnt.dto.UploadRemoteDocumentDto;
+import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentDto;
 import com.epam.digital.data.platform.dgtldcmnt.validator.RemoteFileSizeValidator;
 import com.epam.digital.data.platform.dgtldcmnt.wrapper.Sha256DigestCalculatingInputStream;
 import com.epam.digital.data.platform.dgtldcmnt.wrapper.ValidateLengthInputStream;
@@ -25,7 +25,6 @@ import com.epam.digital.data.platform.integration.ceph.exception.CephCommunicati
 import com.epam.digital.data.platform.starter.errorhandling.exception.ValidationException;
 import com.epam.digital.data.platform.storage.file.dto.BaseFileMetadataDto;
 import com.epam.digital.data.platform.storage.file.dto.BaseFileMetadataDto.BaseUserMetadataHeaders;
-import com.epam.digital.data.platform.storage.file.dto.FileMetadataDto;
 import com.epam.digital.data.platform.storage.file.dto.FileObjectDto;
 import com.epam.digital.data.platform.storage.file.service.FileStorageService;
 import java.util.LinkedHashMap;
@@ -47,18 +46,18 @@ public class CephInternalApiDocumentService implements InternalApiDocumentServic
   private final FileStorageService storage;
   private final RemoteFileSizeValidator validator;
 
-  public RemoteDocumentMetadataDto put(UploadRemoteDocumentDto documentDto) {
-    validator.validate(documentDto.getContentLength());
+  public RemoteDocumentMetadataDto put(UploadDocumentDto documentDto) {
+    validator.validate(documentDto.getSize());
     
     var fileId = UUID.randomUUID().toString();
-    var validateLengthIS = new ValidateLengthInputStream(documentDto.getInputStream(), validator);
+    var validateLengthIS = new ValidateLengthInputStream(documentDto.getFileInputStream(), validator);
     var sha256DigestCalculatingIS = new Sha256DigestCalculatingInputStream(validateLengthIS);
     log.info("Downloading file {} from remote URI and uploading it to the storage in process {}",
         documentDto.getFilename(), documentDto.getProcessInstanceId());
 
     var userMetadata = buildUserMetadata(fileId, documentDto.getFilename());
     var fileMetadata = new BaseFileMetadataDto(
-        documentDto.getContentLength(), documentDto.getContentType(), userMetadata);
+        documentDto.getSize(), documentDto.getContentType(), userMetadata);
     var fileObjectDto = FileObjectDto.builder()
         .content(sha256DigestCalculatingIS)
         .metadata(fileMetadata).build();
