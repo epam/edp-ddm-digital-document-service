@@ -72,7 +72,7 @@ public class AllowedUploadedDocumentValidator implements
     }
     log.trace("Filename extension - '{}'", fileExtension);
 
-    var isExtensionValid = acceptedExtensions.contains(fileExtension);
+    var isExtensionValid = acceptedExtensions.contains(fileExtension.toLowerCase());
     if (!isExtensionValid) {
       context.buildConstraintViolationWithTemplate(
               "File extension doesn't correspond to input media type")

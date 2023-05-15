@@ -63,6 +63,7 @@ class AllowedUploadedDocumentValidatorTest {
   @DisplayName("should return true if input contentType equals to detected contentType and file extension corresponds to input contentType")
   @CsvSource({
       "application/pdf,file.pdf,application/pdf",
+      "application/pdf,file.PDF,application/pdf",
       "image/jpeg,file.jpeg,image/jpeg",
       "image/jpeg,file.jpg,image/jpeg",
       "image/png,file.png,image/png",
