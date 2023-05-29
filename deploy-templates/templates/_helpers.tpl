@@ -65,3 +65,12 @@ sidecar.istio.io/proxyCPU: {{ .Values.global.registry.digitalDocumentService.ist
 sidecar.istio.io/proxyMemory: {{ .Values.global.registry.digitalDocumentService.istio.sidecar.resources.requests.memory | quote }}
 {{- end }}
 {{- end -}}
+
+{{- define "horizontalPodAutoscaler.apiVersion" }}
+{{- if eq .Values.global.clusterVersion "4.9.0" }}
+{{- printf "%s" "autoscaling/v2beta2" }}
+{{- else }}
+{{- printf "%s" "autoscaling/v2" }}
+{{- end }}
+{{- end }}
+
