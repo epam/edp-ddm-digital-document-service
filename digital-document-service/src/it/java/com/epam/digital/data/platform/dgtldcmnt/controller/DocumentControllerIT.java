@@ -33,13 +33,21 @@ import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentFromUserFormDt
 import com.epam.digital.data.platform.starter.security.jwt.JwtAuthenticationFilter;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.google.common.base.Strings;
 import com.google.common.io.ByteStreams;
+import com.jayway.jsonpath.DocumentContext;
+import com.jayway.jsonpath.JsonPath;
+import java.io.ByteArrayInputStream;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse.BodyHandlers;
 import java.util.List;
 import java.util.Objects;
 import lombok.SneakyThrows;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -54,6 +62,9 @@ class DocumentControllerIT extends BaseIT {
   private final String fieldName = "testUpload1";
   private final String formKey = "upload-test";
   private final byte[] data = new byte[]{1};
+
+  @LocalServerPort
+  private int port;
 
   @BeforeEach
   public void init() {
@@ -83,6 +94,47 @@ class DocumentControllerIT extends BaseIT {
         .pathSegment(response.getId())
         .toUriString();
     assertThat(response.getUrl()).isEqualTo(expectedUrl);
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldThrowIfFileIsGreaterThenMaxFileSizeUploadDocument() {
+    var contextDto = createDocumentContextDto();
+    var url = UriComponentsBuilder.newInstance().scheme("http")
+        .host("localhost")
+        .port(port)
+        .pathSegment("documents")
+        .pathSegment(contextDto.getProcessInstanceId())
+        .pathSegment(contextDto.getTaskId())
+        .pathSegment(contextDto.getFieldName())
+        .build()
+        .toUri();
+
+    var fileData = Strings.repeat("file", 65535); // ~256KB
+    var data =
+        "--$boundary\r\nContent-Disposition: form-data; name=\"file\"; filename=\"file.csv\"\r\nContent-Type: text/csv\r\n\r\n"
+            + fileData + "\r\n--$boundary--";
+
+    var request = HttpRequest.newBuilder()
+        .uri(url)
+        .header("Content-Type", "multipart/form-data;boundary=$boundary")
+        .header("Content-Disposition", "form-data; name=file; filename=file.csv")
+        .header(JwtAuthenticationFilter.AUTHORIZATION_HEADER, accessToken)
+        .header(DocumentController.X_FORWARDED_HOST_HEADER, host)
+        .POST(HttpRequest.BodyPublishers
+            .ofInputStream(() -> new ByteArrayInputStream(data.getBytes())))
+        .build();
+
+    var response = HttpClient.newHttpClient().send(request, BodyHandlers.ofString());
+
+    assertThat(response.statusCode()).isEqualTo(413);
+
+    DocumentContext ctx = JsonPath.parse(response.body());
+    assertThat(ctx.read("$.traceId", String.class)).isNotNull();
+    assertThat(ctx.read("$.code", String.class)).isEqualTo("FILE_SIZE_IS_TOO_LARGE");
+    assertThat(ctx.read("$.message", String.class)).isEqualTo(
+        "The size of the uploaded file exceeds 0.2MB");
+    assertThat(ctx.read("$.localizedMessage", String.class)).isNull();
   }
 
   @Test
@@ -249,9 +301,9 @@ class DocumentControllerIT extends BaseIT {
         .toUriString();
 
     var responseAsStr = mockMvc.perform(MockMvcRequestBuilders.multipart(url)
-        .file(new MockMultipartFile("file", filename, contentType, data))
-        .header(JwtAuthenticationFilter.AUTHORIZATION_HEADER, accessToken)
-        .header(DocumentController.X_FORWARDED_HOST_HEADER, host))
+            .file(new MockMultipartFile("file", filename, contentType, data))
+            .header(JwtAuthenticationFilter.AUTHORIZATION_HEADER, accessToken)
+            .header(DocumentController.X_FORWARDED_HOST_HEADER, host))
         .andExpect(status().isOk())
         .andReturn()
         .getResponse()
@@ -295,11 +347,13 @@ class DocumentControllerIT extends BaseIT {
   }
 
   @SneakyThrows
-  private void mockFormProviderGetFormMetadata(String formKey, String fieldName, String formMetadataPath) {
+  private void mockFormProviderGetFormMetadata(String formKey, String fieldName,
+      String formMetadataPath) {
     var formMetadata = new String(ByteStreams.toByteArray(
         Objects.requireNonNull(BaseIT.class.getResourceAsStream(formMetadataPath))));
     formValidationServer.addStubMapping(
-        stubFor(WireMock.post(urlPathEqualTo(String.format("/api/form-submissions/%s/fields/%s/validate", formKey, fieldName)))
+        stubFor(WireMock.post(urlPathEqualTo(
+                String.format("/api/form-submissions/%s/fields/%s/validate", formKey, fieldName)))
             .willReturn(aResponse()
                 .withHeader("Content-Type", "application/json")
                 .withStatus(200)
@@ -309,7 +363,8 @@ class DocumentControllerIT extends BaseIT {
   @SneakyThrows
   private void mockCheckFieldNames(String formKey) {
     formValidationServer.addStubMapping(
-        stubFor(WireMock.post(urlPathEqualTo(String.format("/api/form-submissions/%s/fields/check", formKey)))
+        stubFor(WireMock.post(
+                urlPathEqualTo(String.format("/api/form-submissions/%s/fields/check", formKey)))
             .willReturn(aResponse()
                 .withHeader("Content-Type", "application/json")
                 .withStatus(200))));

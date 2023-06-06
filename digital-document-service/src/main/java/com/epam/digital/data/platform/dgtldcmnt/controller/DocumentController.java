@@ -16,6 +16,7 @@
 
 package com.epam.digital.data.platform.dgtldcmnt.controller;
 
+import com.epam.digital.data.platform.dgtldcmnt.config.DigitalDocumentsConfigurationProperties;
 import com.epam.digital.data.platform.dgtldcmnt.dto.DeleteDocumentDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.DocumentMetadataDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.DocumentMetadataSearchRequestDto;
@@ -31,9 +32,9 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
+import javax.servlet.annotation.MultipartConfig;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ContentDisposition;
@@ -55,12 +56,12 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/documents")
 @RequiredArgsConstructor
+@MultipartConfig
 public class DocumentController {
 
   public static final String X_FORWARDED_HOST_HEADER = "x-forwarded-host";
 
-  @Value("${digital-documents.content.disposition-type}")
-  private final String contentDispositionType;
+  private final DigitalDocumentsConfigurationProperties digitalDocumentsProperties;
   private final DocumentFacade documentFacade;
 
   /**
@@ -126,7 +127,8 @@ public class DocumentController {
         .id(id)
         .build();
     var documentDto = documentFacade.validateAndGet(getDocumentDto, authentication);
-    var contentDisposition = ContentDisposition.builder(contentDispositionType)
+    var contentDisposition = ContentDisposition.builder(
+            digitalDocumentsProperties.getContent().getDispositionType())
         .filename(documentDto.getName()).build();
     var headers = new HttpHeaders();
     headers.setContentDisposition(contentDisposition);

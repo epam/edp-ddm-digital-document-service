@@ -16,6 +16,7 @@
 
 package com.epam.digital.data.platform.dgtldcmnt.controller;
 
+import com.epam.digital.data.platform.dgtldcmnt.config.DigitalDocumentsConfigurationProperties;
 import com.epam.digital.data.platform.dgtldcmnt.dto.GetDocumentDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.InternalApiDocumentMetadataDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.RemoteDocumentDto;
@@ -32,7 +33,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ContentDisposition;
@@ -51,9 +51,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/internal-api/documents")
 public class InternalApiDocumentController {
 
-  @Value("${digital-documents.content.disposition-type}")
-  private final String contentDispositionType;
-
+  private final DigitalDocumentsConfigurationProperties digitalDocumentsProperties;
   private final InternalApiDocumentService internalApiDocumentService;
   private final DocumentFacade documentFacade;
 
@@ -98,7 +96,8 @@ public class InternalApiDocumentController {
         .build();
     var documentDto = documentFacade.get(getDocumentDto);
     var resource = new InputStreamResource(documentDto.getContent());
-    var contentDisposition = ContentDisposition.builder(contentDispositionType)
+    var contentDisposition = ContentDisposition.builder(
+            digitalDocumentsProperties.getContent().getDispositionType())
         .filename(documentDto.getName()).build();
     var headers = new HttpHeaders();
     headers.setContentDisposition(contentDisposition);

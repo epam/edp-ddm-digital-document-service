@@ -22,8 +22,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
+import com.epam.digital.data.platform.dgtldcmnt.config.DigitalDocumentsConfigurationProperties;
+import com.epam.digital.data.platform.dgtldcmnt.config.DigitalDocumentsConfigurationProperties.ContentConfigurationProperties;
 import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentFromUserFormDto;
 import com.epam.digital.data.platform.dgtldcmnt.exception.BatchFileMaxSizeException;
+import com.epam.digital.data.platform.dgtldcmnt.util.unit.FractionalDataSize;
 import com.epam.digital.data.platform.integration.formprovider.client.FormValidationClient;
 import com.epam.digital.data.platform.integration.formprovider.dto.FileDataValidationDto;
 import com.epam.digital.data.platform.integration.formprovider.exception.SubmissionValidationException;
@@ -40,7 +43,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.util.unit.DataSize;
 
 @ExtendWith(MockitoExtension.class)
 class ValidationServiceTest {
@@ -52,7 +54,11 @@ class ValidationServiceTest {
   private final String formKey = "formKey";
   private final Long size = 1000L;
 
-  private final DataSize maxBatchFilesSize = DataSize.ofMegabytes(100);
+  private final DigitalDocumentsConfigurationProperties properties =
+      new DigitalDocumentsConfigurationProperties(
+          FractionalDataSize.parse("100MB"),
+          FractionalDataSize.parse("100MB"),
+          new ContentConfigurationProperties(""));
   @Mock
   private FormValidationClient formValidationClient;
   @Mock
@@ -62,7 +68,7 @@ class ValidationServiceTest {
 
   @BeforeEach
   public void init() {
-    validationService = new ValidationService(maxBatchFilesSize, formValidationClient,
+    validationService = new ValidationService(properties, formValidationClient,
         formDataFileStorageService);
   }
 
@@ -106,7 +112,7 @@ class ValidationServiceTest {
 
     assertThat(exception.getMessage()).isEqualTo(
         String.format(TOTAL_FILES_SIZE_EXCEEDS_MAX_BATCH_FILES_SIZE_MSG,
-            maxBatchFilesSize.toMegabytes()));
+            properties.getMaxTotalFileSize().toMegabytes()));
   }
 
   @Test

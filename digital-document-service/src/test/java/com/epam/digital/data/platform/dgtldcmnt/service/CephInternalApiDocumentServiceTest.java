@@ -22,7 +22,10 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
+import com.epam.digital.data.platform.dgtldcmnt.config.DigitalDocumentsConfigurationProperties;
+import com.epam.digital.data.platform.dgtldcmnt.config.DigitalDocumentsConfigurationProperties.ContentConfigurationProperties;
 import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentDto;
+import com.epam.digital.data.platform.dgtldcmnt.util.unit.FractionalDataSize;
 import com.epam.digital.data.platform.dgtldcmnt.validator.RemoteFileSizeValidator;
 import com.epam.digital.data.platform.starter.errorhandling.exception.ValidationException;
 import com.epam.digital.data.platform.storage.file.dto.BaseFileMetadataDto;
@@ -39,7 +42,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.util.unit.DataSize;
 
 @ExtendWith(MockitoExtension.class)
 class CephInternalApiDocumentServiceTest {
@@ -62,7 +64,11 @@ class CephInternalApiDocumentServiceTest {
   @BeforeEach
   public void init() {
     documentService = new CephInternalApiDocumentService(storageService,
-        new RemoteFileSizeValidator(DataSize.ofMegabytes(1)));
+        new RemoteFileSizeValidator(
+            new DigitalDocumentsConfigurationProperties(
+                FractionalDataSize.parse("1MB"),
+                FractionalDataSize.parse("1MB"),
+                new ContentConfigurationProperties(""))));
   }
 
   @Test

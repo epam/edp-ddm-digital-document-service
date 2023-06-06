@@ -16,6 +16,7 @@
 
 package com.epam.digital.data.platform.dgtldcmnt.exception;
 
+import com.epam.digital.data.platform.dgtldcmnt.config.DigitalDocumentsConfigurationProperties;
 import com.epam.digital.data.platform.dgtldcmnt.validator.AllowedUploadedDocument;
 import com.epam.digital.data.platform.starter.errorhandling.BaseRestExceptionHandler;
 import com.epam.digital.data.platform.starter.errorhandling.dto.SystemErrorDto;
@@ -25,11 +26,9 @@ import javax.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.util.unit.DataSize;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -42,8 +41,7 @@ import org.springframework.web.server.UnsupportedMediaTypeStatusException;
 @RequiredArgsConstructor
 public class RestExceptionHandler {
 
-  @Value("${spring.servlet.multipart.max-request-size}")
-  private DataSize maxRequestSize;
+  private final DigitalDocumentsConfigurationProperties digitalDocumentsProperties;
 
   private static final String FILE_SIZE_IS_TOO_LARGE_CODE = "FILE_SIZE_IS_TOO_LARGE";
   private static final String BATCH_FILE_SIZE_IS_TOO_LARGE_CODE = "BATCH_FILE_SIZE_IS_TOO_LARGE";
@@ -128,7 +126,8 @@ public class RestExceptionHandler {
     var error = SystemErrorDto.builder()
         .traceId(MDC.get(BaseRestExceptionHandler.TRACE_ID_KEY))
         .code(FILE_SIZE_IS_TOO_LARGE_CODE)
-        .message(String.format("The size of the uploaded file exceeds %sMB", maxRequestSize.toMegabytes()))
+        .message(String.format("The size of the uploaded file exceeds %sMB",
+            digitalDocumentsProperties.getMaxFileSize().toMegabytes()))
         .build();
     log.error("File size is too large", ex);
     return new ResponseEntity<>(error, HttpStatus.PAYLOAD_TOO_LARGE);

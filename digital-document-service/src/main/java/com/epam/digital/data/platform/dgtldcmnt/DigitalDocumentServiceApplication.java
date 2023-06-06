@@ -16,10 +16,13 @@
 
 package com.epam.digital.data.platform.dgtldcmnt;
 
+import com.epam.digital.data.platform.dgtldcmnt.config.DigitalDocumentsConfigurationProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 @SpringBootApplication
+@EnableConfigurationProperties(DigitalDocumentsConfigurationProperties.class)
 public class DigitalDocumentServiceApplication {
 
   public static void main(String[] args) {
