@@ -4,10 +4,6 @@ server:
 spring:
   application:
     name: digital-document-service
-  servlet:
-    multipart:
-      max-file-size: ${digital-documents.max-file-size}
-      max-request-size: ${digital-documents.max-total-file-size}
   sleuth:
     opentracing:
       enabled: true

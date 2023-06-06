@@ -10,3 +10,7 @@ ceph:
   access-key: access-key
   secret-key: secret-key
   bucket: bucket-name
+
+digital-documents:
+  max-file-size: 0.2MB
+  max-total-file-size: 3.3MB

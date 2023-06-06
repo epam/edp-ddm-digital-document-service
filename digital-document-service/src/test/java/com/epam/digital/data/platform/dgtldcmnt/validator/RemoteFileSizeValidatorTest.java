@@ -19,14 +19,19 @@ package com.epam.digital.data.platform.dgtldcmnt.validator;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.epam.digital.data.platform.dgtldcmnt.config.DigitalDocumentsConfigurationProperties;
+import com.epam.digital.data.platform.dgtldcmnt.config.DigitalDocumentsConfigurationProperties.ContentConfigurationProperties;
+import com.epam.digital.data.platform.dgtldcmnt.util.unit.FractionalDataSize;
 import com.epam.digital.data.platform.starter.errorhandling.exception.ValidationException;
 import org.junit.jupiter.api.Test;
-import org.springframework.util.unit.DataSize;
 
 class RemoteFileSizeValidatorTest {
 
   private final RemoteFileSizeValidator instance = new RemoteFileSizeValidator(
-      DataSize.ofMegabytes(1));
+      new DigitalDocumentsConfigurationProperties(
+          FractionalDataSize.parse("1MB"),
+          FractionalDataSize.parse("1MB"),
+          new ContentConfigurationProperties("")));
 
   @Test
   void shouldNotThrowException() {

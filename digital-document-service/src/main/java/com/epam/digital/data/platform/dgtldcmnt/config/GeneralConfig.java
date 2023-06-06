@@ -17,12 +17,31 @@
 package com.epam.digital.data.platform.dgtldcmnt.config;
 
 import com.epam.digital.data.platform.bpms.client.config.FeignConfig;
+import javax.servlet.MultipartConfigElement;
+import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.web.servlet.MultipartProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
+import org.springframework.util.unit.DataSize;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
+@RequiredArgsConstructor
 @Import({FeignConfig.class})
 public class GeneralConfig implements WebMvcConfigurer {
 
+  private final MultipartProperties multipartProperties;
+  private final DigitalDocumentsConfigurationProperties digitalDocumentsProperties;
+
+  @Bean
+  @Primary
+  public MultipartConfigElement multipartConfigElement() {
+    multipartProperties.setMaxFileSize(
+        DataSize.ofBytes(digitalDocumentsProperties.getMaxFileSize().toBytes()));
+    multipartProperties.setMaxRequestSize(
+        DataSize.ofBytes(digitalDocumentsProperties.getMaxTotalFileSize().toBytes()));
+    return this.multipartProperties.createMultipartConfig();
+  }
 }

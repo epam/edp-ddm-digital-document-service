@@ -16,6 +16,7 @@
 
 package com.epam.digital.data.platform.dgtldcmnt.service;
 
+import com.epam.digital.data.platform.dgtldcmnt.config.DigitalDocumentsConfigurationProperties;
 import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentFromUserFormDto;
 import com.epam.digital.data.platform.dgtldcmnt.exception.BatchFileMaxSizeException;
 import com.epam.digital.data.platform.integration.formprovider.client.FormValidationClient;
@@ -28,10 +29,8 @@ import com.epam.digital.data.platform.storage.file.service.FormDataFileStorageSe
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
-import org.springframework.util.unit.DataSize;
 
 /**
  * Validation service that validates the document metadata based on the form metadata.
@@ -43,8 +42,7 @@ public class ValidationService {
 
   public static final String TOTAL_FILES_SIZE_EXCEEDS_MAX_BATCH_FILES_SIZE_MSG = "The total size of the downloaded files exceeds %sMB";
 
-  @Value("${digital-documents.max-total-file-size:100MB}")
-  private final DataSize maxBatchFileSize;
+  private final DigitalDocumentsConfigurationProperties digitalDocumentsProperties;
   private final FormValidationClient formValidationClient;
   private final FormDataFileStorageService formDataFileStorageService;
 
@@ -89,10 +87,11 @@ public class ValidationService {
         .mapToDouble(FileMetadataDto::getContentLength)
         .sum();
     var currentFileSize = uploadDto.getSize();
-    if (currentFileSize + otherFilesSize > maxBatchFileSize.toBytes()) {
+    if (currentFileSize + otherFilesSize > digitalDocumentsProperties.getMaxTotalFileSize()
+        .toBytes()) {
       throw new BatchFileMaxSizeException(
           String.format(TOTAL_FILES_SIZE_EXCEEDS_MAX_BATCH_FILES_SIZE_MSG,
-              maxBatchFileSize.toMegabytes()));
+              digitalDocumentsProperties.getMaxTotalFileSize().toMegabytes()));
     }
   }
 }

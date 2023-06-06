@@ -16,15 +16,14 @@
 
 package com.epam.digital.data.platform.dgtldcmnt.validator;
 
+import com.epam.digital.data.platform.dgtldcmnt.config.DigitalDocumentsConfigurationProperties;
 import com.epam.digital.data.platform.starter.errorhandling.BaseRestExceptionHandler;
 import com.epam.digital.data.platform.starter.errorhandling.dto.ValidationErrorDto;
 import com.epam.digital.data.platform.starter.errorhandling.exception.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import org.springframework.util.unit.DataSize;
 
 /**
  * Validates the size of a file that is downloaded from a remote source. It must be no larger than
@@ -36,8 +35,7 @@ public class RemoteFileSizeValidator implements FileSizeValidator {
 
   public static final String FILE_SIZE_EXCEEDS_LIMIT = "File size exceeded %s MB";
 
-  @Value("${digital-documents.max-file-size:100MB}")
-  private final DataSize maxFileSize;
+  private final DigitalDocumentsConfigurationProperties digitalDocumentsProperties;
 
   /**
    * Validates current amount of bytes.
@@ -46,9 +44,9 @@ public class RemoteFileSizeValidator implements FileSizeValidator {
    */
   @Override
   public void validate(long numberOfBytes) {
-    if (numberOfBytes > maxFileSize.toBytes()) {
-      throw createValidationException(
-          String.format(FILE_SIZE_EXCEEDS_LIMIT, maxFileSize.toMegabytes()));
+    if (numberOfBytes > digitalDocumentsProperties.getMaxFileSize().toBytes()) {
+      throw createValidationException(String.format(FILE_SIZE_EXCEEDS_LIMIT,
+          digitalDocumentsProperties.getMaxFileSize().toMegabytes()));
     }
   }
 
