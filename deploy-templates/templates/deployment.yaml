@@ -4,6 +4,8 @@ metadata:
   name: {{ .Chart.Name }}
   labels:
     app: {{ .Chart.Name }}
+  annotations:
+    configmap.reloader.stakater.com/reload: "{{ .Chart.Name }}"
 spec:
   selector:
     matchLabels:
@@ -18,7 +20,6 @@ spec:
     metadata:
       {{- if or .Values.podAnnotations .Values.global.registry.digitalDocumentService.istio.sidecar.enabled }}
       annotations:
-        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
         {{- range $key, $value := .Values.podAnnotations }}
         {{ $key }}: {{ $value | quote }}
         {{- end }}
