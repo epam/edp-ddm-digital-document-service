@@ -40,5 +40,5 @@ public class UploadDocumentDto {
   /**
    * The process instance id to whom the document belongs to. It is used for authorization.
    */
-  private String processInstanceId;
+  private String rootProcessInstanceId;
 }

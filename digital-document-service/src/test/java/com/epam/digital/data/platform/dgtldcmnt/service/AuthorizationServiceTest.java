@@ -44,7 +44,7 @@ class AuthorizationServiceTest {
   private AuthorizationService authorizationService;
 
   private final String taskId = "testTaskId";
-  private final String processInstanceId = "testProcessInstanceId";
+  private final String rootProcessInstanceId = "testProcessInstanceId";
   private final List<String> fieldNames = List.of("testUpload1");
   private final String formKey = "upload-test";
   private final String assignee = "testAssignee";
@@ -59,7 +59,7 @@ class AuthorizationServiceTest {
     taskDto.setFormKey(formKey);
     taskDto.setId(taskId);
     taskDto.setAssignee(assignee);
-    taskDto.setProcessInstanceId(processInstanceId);
+    taskDto.setRootProcessInstanceId(rootProcessInstanceId);
 
     var principal = new User(assignee, "", new ArrayList<>());
     authentication = new UsernamePasswordAuthenticationToken(principal, null, null);
@@ -69,7 +69,7 @@ class AuthorizationServiceTest {
   void shouldAuthorize() {
     assertDoesNotThrow(
         () -> authorizationService
-            .authorize(processInstanceId, fieldNames, taskDto, authentication));
+            .authorize(rootProcessInstanceId, fieldNames, taskDto, authentication));
   }
 
   @Test
@@ -90,7 +90,7 @@ class AuthorizationServiceTest {
     taskDto.setFormKey(formKey);
     taskDto.setId(taskId);
     taskDto.setAssignee(assignee);
-    taskDto.setProcessInstanceId(notActiveProcessInstanceId);
+    taskDto.setRootProcessInstanceId(notActiveProcessInstanceId);
     taskDto.setSuspended(true);
 
     var exception = assertThrows(AccessDeniedException.class,
@@ -106,11 +106,11 @@ class AuthorizationServiceTest {
     taskDto.setFormKey(formKey);
     taskDto.setId(taskId);
     taskDto.setAssignee("invalidAssignee");
-    taskDto.setProcessInstanceId(processInstanceId);
+    taskDto.setRootProcessInstanceId(rootProcessInstanceId);
 
     var exception = assertThrows(AccessDeniedException.class,
         () -> authorizationService
-            .authorize(processInstanceId, fieldNames, taskDto, authentication));
+            .authorize(rootProcessInstanceId, fieldNames, taskDto, authentication));
 
     assertThat(exception.getMessage()).isEqualTo(
         String.format(CURRENT_USER_IS_NOT_ASSIGNED_MSG, taskId));
@@ -125,6 +125,6 @@ class AuthorizationServiceTest {
 
     assertDoesNotThrow(
         () -> authorizationService
-            .authorize(processInstanceId, fieldNames, taskDto, authentication));
+            .authorize(rootProcessInstanceId, fieldNames, taskDto, authentication));
   }
 }

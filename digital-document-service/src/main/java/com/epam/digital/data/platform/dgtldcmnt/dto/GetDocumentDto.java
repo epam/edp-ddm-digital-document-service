@@ -34,7 +34,7 @@ public class GetDocumentDto {
   /**
    * The process instance id to whom the document belongs to. It is used for authorization.
    */
-  private String processInstanceId;
+  private String rootProcessInstanceId;
 
   /**
    * The task id that has ui form and filedName under which document is loaded. It is used for

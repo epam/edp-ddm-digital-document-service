@@ -24,7 +24,7 @@ import lombok.Data;
 public class DeleteDocumentDto {
 
   private String id;
-  private String processInstanceId;
+  private String rootProcessInstanceId;
   private String taskId;
   private String fieldName;
 }

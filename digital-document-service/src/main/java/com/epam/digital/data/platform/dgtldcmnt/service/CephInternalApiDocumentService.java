@@ -53,7 +53,7 @@ public class CephInternalApiDocumentService implements InternalApiDocumentServic
     var validateLengthIS = new ValidateLengthInputStream(documentDto.getFileInputStream(), validator);
     var sha256DigestCalculatingIS = new Sha256DigestCalculatingInputStream(validateLengthIS);
     log.info("Downloading file {} from remote URI and uploading it to the storage in process {}",
-        documentDto.getFilename(), documentDto.getProcessInstanceId());
+        documentDto.getFilename(), documentDto.getRootProcessInstanceId());
 
     var userMetadata = buildUserMetadata(fileId, documentDto.getFilename());
     var fileMetadata = new BaseFileMetadataDto(
@@ -64,7 +64,7 @@ public class CephInternalApiDocumentService implements InternalApiDocumentServic
 
     BaseFileMetadataDto resultMetadata;
     try {
-      resultMetadata = storage.save(documentDto.getProcessInstanceId(), fileId, fileObjectDto);
+      resultMetadata = storage.save(documentDto.getRootProcessInstanceId(), fileId, fileObjectDto);
     } catch (CephCommunicationException e) {
       if(e.getCause() instanceof ValidationException) {
         throw (ValidationException)e.getCause();
@@ -73,7 +73,7 @@ public class CephInternalApiDocumentService implements InternalApiDocumentServic
     }
     String checksum = Hex.encodeHexString(sha256DigestCalculatingIS.getDigest());
     userMetadata.put(BaseUserMetadataHeaders.CHECKSUM, checksum);
-    storage.setUserMetadata(documentDto.getProcessInstanceId(), fileId, userMetadata);
+    storage.setUserMetadata(documentDto.getRootProcessInstanceId(), fileId, userMetadata);
     log.debug("File {} uploaded. Id {}", documentDto.getFilename(), fileId);
     return toRemoteDocumentMetadataDto(resultMetadata, checksum);
   }
