@@ -48,29 +48,31 @@ public class AuthorizationService {
    * <li> Checking task assignee (current user should be assigned).
    * <li> Checking filed names existence in the form metadata
    *
-   * @param processInstanceId specified process instance id in which the documents are loaded
-   * @param fieldNames        the field names of the ui form in which documents are loaded.
-   * @param taskDto           the task in which the documents are loaded.
-   * @param authentication    object with authentication data.
+   * @param rootProcessInstanceId specified id of root process instance in which the documents are
+   *                              loaded
+   * @param fieldNames            the field names of the ui form in which documents are loaded.
+   * @param taskDto               the task in which the documents are loaded.
+   * @param authentication        object with authentication data.
    * @throws AccessDeniedException when user does not have permission or access to the documents.
    */
-  public void authorize(String processInstanceId, List<String> fieldNames,
+  public void authorize(String rootProcessInstanceId, List<String> fieldNames,
       DdmSignableTaskDto taskDto, Authentication authentication) {
     log.debug("Starting authorization for files {} for task {} in process {}", fieldNames,
-        taskDto.getId(), processInstanceId);
-    checkTaskExistenceInProcessInstance(processInstanceId, taskDto);
+        taskDto.getId(), rootProcessInstanceId);
+    checkTaskExistenceInProcessInstance(rootProcessInstanceId, taskDto);
     checkTaskStatus(taskDto);
     checkTaskAssignee(taskDto, authentication);
     log.debug("Files {} for task {} have been authorized for user", fieldNames, taskDto.getId());
   }
 
-  private void checkTaskExistenceInProcessInstance(String processInstanceId,
+  private void checkTaskExistenceInProcessInstance(String rootProcessInstanceId,
       DdmSignableTaskDto taskDto) {
-    if (!taskDto.getProcessInstanceId().equals(processInstanceId)) {
+    if (!taskDto.getRootProcessInstanceId().equals(rootProcessInstanceId)) {
       throw new AccessDeniedException(String.format(TASK_NOT_FOUND_IN_PROCESS_INSTANCE_MSG,
-          taskDto.getId(), processInstanceId));
+          taskDto.getId(), rootProcessInstanceId));
     }
-    log.trace("Task's {} process instance was verified ({})", taskDto.getId(), processInstanceId);
+    log.trace("Task's {} root process instance was verified ({})", taskDto.getId(),
+        rootProcessInstanceId);
   }
 
   private void checkTaskStatus(DdmSignableTaskDto taskDto) {

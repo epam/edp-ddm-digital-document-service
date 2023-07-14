@@ -61,7 +61,7 @@ class CephDocumentServiceTest {
   private final String filename = "testFilename";
   private final String contentType = "application/pdf";
   private final String taskId = "testTaskId";
-  private final String processInstanceId = "testProcessInstanceId";
+  private final String rootProcessInstanceId = "testProcessInstanceId";
   private final String fieldName = "testFieldName";
   private final String originRequestUrl = "test.com";
   private final Long contentLength = 1000L;
@@ -80,7 +80,7 @@ class CephDocumentServiceTest {
         .contentType(contentType)
         .build();
     var uploadDto = UploadDocumentFromUserFormDto.builder()
-        .processInstanceId(processInstanceId)
+        .rootProcessInstanceId(rootProcessInstanceId)
         .originRequestUrl(originRequestUrl)
         .contentType(contentType)
         .fieldName(fieldName)
@@ -90,7 +90,7 @@ class CephDocumentServiceTest {
         .build();
 
     ArgumentCaptor<FileDataDto> captor = ArgumentCaptor.forClass(FileDataDto.class);
-    when(fromDataFileStorageService.save(eq(processInstanceId), anyString(),
+    when(fromDataFileStorageService.save(eq(rootProcessInstanceId), anyString(),
         captor.capture())).thenReturn(testObjectMetaData);
 
     var savedDocMetadata = service.put(uploadDto);
@@ -108,7 +108,7 @@ class CephDocumentServiceTest {
     assertThat(savedDocMetadata.getUrl()).contains(userMetadata.getId());
     var expectedUrl = UriComponentsBuilder.newInstance().scheme("https").host(originRequestUrl)
         .pathSegment("documents")
-        .pathSegment(processInstanceId)
+        .pathSegment(rootProcessInstanceId)
         .pathSegment(taskId)
         .pathSegment(fieldName)
         .pathSegment(userMetadata.getId())
@@ -119,7 +119,7 @@ class CephDocumentServiceTest {
   @Test
   void testGetDocument() throws IOException {
     var getDocumentDto = GetDocumentDto.builder()
-        .processInstanceId(processInstanceId)
+        .rootProcessInstanceId(rootProcessInstanceId)
         .id(key)
         .build();
     var metadataDto = FileMetadataDto.builder()
@@ -133,7 +133,7 @@ class CephDocumentServiceTest {
         .build();
 
     when(
-        fromDataFileStorageService.loadByProcessInstanceIdAndId(processInstanceId, key)).thenReturn(
+        fromDataFileStorageService.loadByProcessInstanceIdAndId(rootProcessInstanceId, key)).thenReturn(
         fileDataDto);
 
     DocumentDto documentDto = service.get(getDocumentDto);
@@ -147,12 +147,12 @@ class CephDocumentServiceTest {
 
   @Test
   void testGetDocumentThatNotFound() {
-    when(fromDataFileStorageService.loadByProcessInstanceIdAndId(processInstanceId, key))
+    when(fromDataFileStorageService.loadByProcessInstanceIdAndId(rootProcessInstanceId, key))
         .thenThrow(FileNotFoundException.class);
 
     assertThrows(FileNotFoundException.class,
         () -> service
-            .get(GetDocumentDto.builder().processInstanceId(processInstanceId).id(key).build()));
+            .get(GetDocumentDto.builder().rootProcessInstanceId(rootProcessInstanceId).id(key).build()));
   }
 
   @Test
@@ -164,12 +164,12 @@ class CephDocumentServiceTest {
         .build();
     var getMetadataDto = GetDocumentsMetadataDto.builder()
         .documents(List.of(DocumentIdDto.builder().id(key).fieldName(fieldName).build()))
-        .processInstanceId(processInstanceId)
+        .rootProcessInstanceId(rootProcessInstanceId)
         .originRequestUrl(originRequestUrl)
         .taskId(taskId)
         .build();
 
-    when(fromDataFileStorageService.getMetadata(processInstanceId, Set.of(key))).thenReturn(
+    when(fromDataFileStorageService.getMetadata(rootProcessInstanceId, Set.of(key))).thenReturn(
         List.of(fileMetadata));
 
     var metadata = service.getMetadata(getMetadataDto);
@@ -186,10 +186,10 @@ class CephDocumentServiceTest {
         .filename("test.pdf")
         .build();
 
-    when(fromDataFileStorageService.getMetadata(processInstanceId, Set.of(key))).thenReturn(
+    when(fromDataFileStorageService.getMetadata(rootProcessInstanceId, Set.of(key))).thenReturn(
         List.of(fileMetadata));
 
-    var metadata = service.getMetadata(processInstanceId, key);
+    var metadata = service.getMetadata(rootProcessInstanceId, key);
     assertThat(metadata.getType()).isEqualTo(contentType);
     assertThat(metadata.getSize()).isEqualTo(contentLength);
   }
@@ -198,11 +198,11 @@ class CephDocumentServiceTest {
   void testGetMetadataDocumentNotFound() {
     var getMetadataDto = GetDocumentsMetadataDto.builder()
         .documents(List.of(DocumentIdDto.builder().id(key).fieldName(fieldName).build()))
-        .processInstanceId(processInstanceId)
+        .rootProcessInstanceId(rootProcessInstanceId)
         .originRequestUrl(originRequestUrl)
         .taskId(taskId)
         .build();
-    when(fromDataFileStorageService.getMetadata(processInstanceId, Set.of(key))).thenThrow(
+    when(fromDataFileStorageService.getMetadata(rootProcessInstanceId, Set.of(key))).thenThrow(
         FileNotFoundException.class);
 
     assertThrows(FileNotFoundException.class, () -> service.getMetadata(getMetadataDto));
@@ -211,7 +211,7 @@ class CephDocumentServiceTest {
   @Test
   void shouldGetDocumentWhenFileNameNull() throws IOException {
     var getDocumentDto = GetDocumentDto.builder()
-        .processInstanceId(processInstanceId)
+        .rootProcessInstanceId(rootProcessInstanceId)
         .id(key)
         .build();
     var metadataDto = FileMetadataDto.builder()
@@ -224,7 +224,7 @@ class CephDocumentServiceTest {
         .build();
 
     when(
-        fromDataFileStorageService.loadByProcessInstanceIdAndId(processInstanceId, key)).thenReturn(
+        fromDataFileStorageService.loadByProcessInstanceIdAndId(rootProcessInstanceId, key)).thenReturn(
         fileDataDto);
 
     DocumentDto documentDto = service.get(getDocumentDto);

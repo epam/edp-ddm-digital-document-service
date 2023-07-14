@@ -65,26 +65,26 @@ public interface DocumentService {
   /**
    * Get document metadata by id.
    *
-   * @param processInstanceId id of a process-instance document has been stored in
-   * @param documentId        id of a document to get metadata
+   * @param rootProcessInstanceId id of a process-instance document has been stored in
+   * @param documentId            id of a document to get metadata
    * @return documents metadata.
    *
    * @throws FileNotFoundException if a document not exist.
    */
-  InternalApiDocumentMetadataDto getMetadata(String processInstanceId, String documentId);
+  InternalApiDocumentMetadataDto getMetadata(String rootProcessInstanceId, String documentId);
 
   /**
    * Delete all documents associated with provided process instance id
    *
-   * @param processInstanceId specified process instance id
+   * @param rootProcessInstanceId specified process instance id
    */
-  void delete(String processInstanceId);
+  void delete(String rootProcessInstanceId);
 
   /**
    * Delete document associated with provided process instance id and file id
    *
-   * @param processInstanceId specified process instance id
-   * @param fileId            specified file id
+   * @param rootProcessInstanceId specified process instance id
+   * @param fileId                specified file id
    */
-  void delete(String processInstanceId, String fileId);
+  void delete(String rootProcessInstanceId, String fileId);
 }

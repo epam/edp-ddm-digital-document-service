@@ -62,16 +62,16 @@ public class DocumentFacade {
       @AllowedUploadedDocument UploadDocumentFromUserFormDto uploadDocumentDto,
       Authentication authentication) {
     var taskId = uploadDocumentDto.getTaskId();
-    var processInstanceId = uploadDocumentDto.getProcessInstanceId();
+    var rootProcessInstanceId = uploadDocumentDto.getRootProcessInstanceId();
     var fieldName = uploadDocumentDto.getFieldName();
     log.info("Uploading file {} to storage for task {} in process {}", fieldName, taskId,
-        processInstanceId);
+        rootProcessInstanceId);
 
     var task = taskRestClient.getTaskById(taskId);
     var formKey = task.getFormKey();
     uploadDocumentDto.setFormKey(formKey);
 
-    authorizationService.authorize(processInstanceId, List.of(fieldName), task,
+    authorizationService.authorize(rootProcessInstanceId, List.of(fieldName), task,
         authentication);
     validationService.validate(uploadDocumentDto);
 
@@ -90,11 +90,12 @@ public class DocumentFacade {
    */
   public DocumentDto validateAndGet(GetDocumentDto getDocumentDto, Authentication authentication) {
     var taskId = getDocumentDto.getTaskId();
-    var processInstanceId = getDocumentDto.getProcessInstanceId();
+    var rootProcessInstanceId = getDocumentDto.getRootProcessInstanceId();
     var fieldName = getDocumentDto.getFieldName();
-    log.info("Downloading file {} for task {} in process {}", fieldName, taskId, processInstanceId);
+    log.info("Downloading file {} for task {} in process {}", fieldName, taskId,
+        rootProcessInstanceId);
 
-    authorize(processInstanceId, taskId, List.of(fieldName), authentication);
+    authorize(rootProcessInstanceId, taskId, List.of(fieldName), authentication);
 
     var result = documentService.get(getDocumentDto);
     log.info("File {} for task {} has been downloaded", fieldName, taskId);
@@ -114,11 +115,11 @@ public class DocumentFacade {
     var fieldNames = getMetadataDto.getDocuments().stream()
         .map(DocumentIdDto::getFieldName).collect(Collectors.toList());
     var taskId = getMetadataDto.getTaskId();
-    var processInstanceId = getMetadataDto.getProcessInstanceId();
+    var rootProcessInstanceId = getMetadataDto.getRootProcessInstanceId();
     log.info("Getting files metadata {} for task {} in process {}", fieldNames, taskId,
-        processInstanceId);
+        rootProcessInstanceId);
 
-    authorize(getMetadataDto.getProcessInstanceId(), getMetadataDto.getTaskId(), fieldNames,
+    authorize(getMetadataDto.getRootProcessInstanceId(), getMetadataDto.getTaskId(), fieldNames,
         authentication);
 
     var result = documentService.getMetadata(getMetadataDto);
@@ -129,14 +130,15 @@ public class DocumentFacade {
   /**
    * Get document metadata by id.
    *
-   * @param processInstanceId id of a process-instance document has been stored in
-   * @param documentId        id of a document to get metadata
+   * @param rootProcessInstanceId id of a process-instance document has been stored in
+   * @param documentId            id of a document to get metadata
    * @return list of documents metadata.
    */
-  public InternalApiDocumentMetadataDto getMetadata(String processInstanceId, String documentId) {
-    log.info("Getting file {} metadata in process {}", documentId, processInstanceId);
+  public InternalApiDocumentMetadataDto getMetadata(String rootProcessInstanceId,
+      String documentId) {
+    log.info("Getting file {} metadata in process {}", documentId, rootProcessInstanceId);
 
-    var result = documentService.getMetadata(processInstanceId, documentId);
+    var result = documentService.getMetadata(rootProcessInstanceId, documentId);
     log.info("File {} metadata has been downloaded", documentId);
     return result;
   }
@@ -144,10 +146,10 @@ public class DocumentFacade {
   /**
    * Delete all documents associated with provided process instance id
    *
-   * @param processInstanceId specified process instance id
+   * @param rootProcessInstanceId specified process instance id
    */
-  public void delete(String processInstanceId) {
-    documentService.delete(processInstanceId);
+  public void delete(String rootProcessInstanceId) {
+    documentService.delete(rootProcessInstanceId);
   }
 
   /**
@@ -158,12 +160,13 @@ public class DocumentFacade {
    */
   public void delete(DeleteDocumentDto deleteDocumentDto, Authentication authentication) {
     var taskId = deleteDocumentDto.getTaskId();
-    var processInstanceId = deleteDocumentDto.getProcessInstanceId();
+    var rootProcessInstanceId = deleteDocumentDto.getRootProcessInstanceId();
     var fieldName = deleteDocumentDto.getFieldName();
 
-    log.info("Deleting file {} for task {} in process {}", fieldName, taskId, processInstanceId);
-    authorize(processInstanceId, taskId, List.of(fieldName), authentication);
-    documentService.delete(processInstanceId, deleteDocumentDto.getId());
+    log.info("Deleting file {} for task {} in process {}", fieldName, taskId,
+        rootProcessInstanceId);
+    authorize(rootProcessInstanceId, taskId, List.of(fieldName), authentication);
+    documentService.delete(rootProcessInstanceId, deleteDocumentDto.getId());
     log.info("File {} for task {} has been deleted", fieldName, taskId);
   }
 
@@ -175,10 +178,10 @@ public class DocumentFacade {
    */
   public InternalApiDocumentMetadataDto put(
       @AllowedUploadedDocument UploadDocumentFromUserFormDto uploadDocumentDto) {
-    var processInstanceId = uploadDocumentDto.getProcessInstanceId();
-    log.info("Uploading file by processInstanceId: {}", processInstanceId);
+    var rootProcessInstanceId = uploadDocumentDto.getRootProcessInstanceId();
+    log.info("Uploading file by rootProcessInstanceId: {}", rootProcessInstanceId);
     var documentMetadata = documentService.put(uploadDocumentDto);
-    log.info("File has been uploaded by processInstanceId: {}", processInstanceId);
+    log.info("File has been uploaded by rootProcessInstanceId: {}", rootProcessInstanceId);
     return InternalApiDocumentMetadataDto.builder()
         .id(documentMetadata.getId())
         .size(documentMetadata.getSize())
@@ -195,15 +198,16 @@ public class DocumentFacade {
    * @return document representation.
    */
   public DocumentDto get(GetDocumentDto getDocumentDto) {
-    log.info("Downloading file with processInstanceId: {}", getDocumentDto.getProcessInstanceId());
+    log.info("Downloading file with rootProcessInstanceId: {}",
+        getDocumentDto.getRootProcessInstanceId());
     return documentService.get(getDocumentDto);
   }
 
-  private void authorize(String processInstance, String taskId, List<String> filedNames,
+  private void authorize(String rootProcessInstanceId, String taskId, List<String> filedNames,
       Authentication authentication) {
     var task = taskRestClient.getTaskById(taskId);
 
     validationService.checkFieldNamesExistence(filedNames, task.getFormKey());
-    authorizationService.authorize(processInstance, filedNames, task, authentication);
+    authorizationService.authorize(rootProcessInstanceId, filedNames, task, authentication);
   }
 }

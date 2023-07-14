@@ -58,17 +58,17 @@ public class InternalApiDocumentController {
   /**
    * Endpoint for uploading document.
    *
-   * @param processInstanceId specified process instance id.
+   * @param rootProcessInstanceId specified process instance id.
    * @return {@link RemoteDocumentMetadataDto} with metadata of the stored document.
    */
-  @PostMapping("/{processInstanceId}")
+  @PostMapping("/{rootProcessInstanceId}")
   @Operation(summary = "Upload document", description = "Returns uploaded document metadata")
   @ApiResponse(
       description = "Returns uploaded document metadata",
       responseCode = "201",
       content = @Content(schema = @Schema(implementation = RemoteDocumentMetadataDto.class)))
   public RemoteDocumentMetadataDto upload(
-      @PathVariable("processInstanceId") String processInstanceId,
+      @PathVariable("rootProcessInstanceId") String rootProcessInstanceId,
       @Valid @RequestBody RemoteDocumentDto requestDto) throws IOException {
     RemoteDocumentMetadataDto metadataDto;
     var connection = requestDto.getRemoteFileLocation().openConnection();
@@ -78,20 +78,20 @@ public class InternalApiDocumentController {
           .size(connection.getContentLength())
           .filename(requestDto.getFilename())
           .fileInputStream(new BufferedInputStream(inputStream))
-          .processInstanceId(processInstanceId)
+          .rootProcessInstanceId(rootProcessInstanceId)
           .build();
       metadataDto = internalApiDocumentService.put(documentDto);
     }
     return metadataDto;
   }
 
-  @GetMapping("/{processInstanceId}/{id}")
+  @GetMapping("/{rootProcessInstanceId}/{id}")
   @Operation(summary = "Download document by id", description = "Returns document by id")
   public ResponseEntity<Resource> download(
-      @PathVariable("processInstanceId") String processInstanceId,
+      @PathVariable("rootProcessInstanceId") String rootProcessInstanceId,
       @PathVariable("id") String id) {
     var getDocumentDto = GetDocumentDto.builder()
-        .processInstanceId(processInstanceId)
+        .rootProcessInstanceId(rootProcessInstanceId)
         .id(id)
         .build();
     var documentDto = documentFacade.get(getDocumentDto);
@@ -108,11 +108,11 @@ public class InternalApiDocumentController {
         .body(resource);
   }
 
-  @GetMapping("/{processInstanceId}/{id}/metadata")
+  @GetMapping("/{rootProcessInstanceId}/{id}/metadata")
   @Operation(summary = "Get document metadata by id", description = "Returns document metadata by document id")
   public InternalApiDocumentMetadataDto getMetadata(
-      @PathVariable("processInstanceId") String processInstanceId,
+      @PathVariable("rootProcessInstanceId") String rootProcessInstanceId,
       @PathVariable("id") String id) {
-    return documentFacade.getMetadata(processInstanceId, id);
+    return documentFacade.getMetadata(rootProcessInstanceId, id);
   }
 }

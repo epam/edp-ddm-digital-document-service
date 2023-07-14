@@ -91,7 +91,7 @@ class CephInternalApiDocumentServiceTest {
         .contentType(CONTENT_TYPE)
         .size(0)
         .fileInputStream(is)
-        .processInstanceId(PROCESS_INSTANCE_ID)
+        .rootProcessInstanceId(PROCESS_INSTANCE_ID)
         .build();
 
     ArgumentCaptor<FileObjectDto> captor = ArgumentCaptor.forClass(FileObjectDto.class);

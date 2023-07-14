@@ -58,7 +58,7 @@ public class AllowedUploadedDocumentValidator implements
   private boolean isFilenameExtensionValid(UploadDocumentDto uploadDocumentDto,
       ConstraintValidatorContext context) {
     log.debug("Validating filename extension for process-instance '{}'",
-        uploadDocumentDto.getProcessInstanceId());
+        uploadDocumentDto.getRootProcessInstanceId());
     final var contentType = uploadDocumentDto.getContentType();
     var acceptedExtensions = getAcceptedExtensions(contentType);
 
@@ -100,7 +100,7 @@ public class AllowedUploadedDocumentValidator implements
   private boolean isDetectedFileContentTypeEqualsToInputContentType(
       UploadDocumentDto uploadDocumentDto, ConstraintValidatorContext context) {
     log.debug("Validating file content type for process-instance '{}'",
-        uploadDocumentDto.getProcessInstanceId());
+        uploadDocumentDto.getRootProcessInstanceId());
     final var filename = uploadDocumentDto.getFilename();
     final var inputFile = uploadDocumentDto.getFileInputStream();
     final String fileContentType;
@@ -144,10 +144,10 @@ public class AllowedUploadedDocumentValidator implements
   @Override
   public boolean isValid(UploadDocumentDto value, ConstraintValidatorContext context) {
     log.debug("Validating input document. Process-instance - '{}'. Validation enabled - '{}'",
-        value.getProcessInstanceId(), mediaTypeValidationEnabled);
+        value.getRootProcessInstanceId(), mediaTypeValidationEnabled);
     var isValid = !mediaTypeValidationEnabled || (isFilenameExtensionValid(value, context)
         && isDetectedFileContentTypeEqualsToInputContentType(value, context));
-    log.debug("Input document for process '{}' is valid - '{}'.", value.getProcessInstanceId(),
+    log.debug("Input document for process '{}' is valid - '{}'.", value.getRootProcessInstanceId(),
         isValid);
     return isValid;
   }

@@ -67,15 +67,15 @@ public class DocumentController {
   /**
    * Endpoint for uploading document.
    *
-   * @param processInstanceId specified process instance id.
-   * @param taskId            specified task id.
-   * @param fieldName         specified filed name.
-   * @param file              {@link MultipartFile} representation of a document.
-   * @param filename          specified filename(optional).
-   * @param authentication    object with authentication data.
+   * @param rootProcessInstanceId specified id of root process instance.
+   * @param taskId                specified task id.
+   * @param fieldName             specified filed name.
+   * @param file                  {@link MultipartFile} representation of a document.
+   * @param filename              specified filename(optional).
+   * @param authentication        object with authentication data.
    * @return {@link DocumentMetadataDto} with metadata of the stored document.
    */
-  @PostMapping("/{processInstanceId}/{taskId}/{fieldName}")
+  @PostMapping("/{rootProcessInstanceId}/{taskId}/{fieldName}")
   @Operation(summary = "Upload document", description = "Returns uploaded document metadata")
   @ApiResponse(
       description = "Returns uploaded document metadata",
@@ -83,7 +83,7 @@ public class DocumentController {
       content = @Content(schema = @Schema(implementation = DocumentMetadataDto.class)))
   public DocumentMetadataDto upload(
       @RequestHeader(X_FORWARDED_HOST_HEADER) String originRequestUrl,
-      @PathVariable("processInstanceId") String processInstanceId,
+      @PathVariable("rootProcessInstanceId") String rootProcessInstanceId,
       @PathVariable("taskId") String taskId,
       @PathVariable("fieldName") String fieldName,
       @RequestParam("file") MultipartFile file,
@@ -93,7 +93,7 @@ public class DocumentController {
         .filename(Objects.isNull(filename) ? file.getOriginalFilename() : filename)
         .fileInputStream(new BufferedInputStream(file.getInputStream()))
         .contentType(file.getContentType())
-        .processInstanceId(processInstanceId)
+        .rootProcessInstanceId(rootProcessInstanceId)
         .originRequestUrl(originRequestUrl)
         .fieldName(fieldName)
         .size(file.getSize())
@@ -105,23 +105,23 @@ public class DocumentController {
   /**
    * Endpoint that handles downloading document by id.
    *
-   * @param processInstanceId specified process instance id.
-   * @param taskId            specified task id.
-   * @param fieldName         specified filed name.
-   * @param id                specified document id.
-   * @param authentication    object with authentication data.
+   * @param rootProcessInstanceId specified process instance id.
+   * @param taskId                specified task id.
+   * @param fieldName             specified filed name.
+   * @param id                    specified document id.
+   * @param authentication        object with authentication data.
    * @return document as {@link InputStreamResource}.
    */
-  @GetMapping("/{processInstanceId}/{taskId}/{fieldName}/{id}")
+  @GetMapping("/{rootProcessInstanceId}/{taskId}/{fieldName}/{id}")
   @Operation(summary = "Download document by id", description = "Returns document by id")
   public ResponseEntity<Resource> download(
-      @PathVariable("processInstanceId") String processInstanceId,
+      @PathVariable("rootProcessInstanceId") String rootProcessInstanceId,
       @PathVariable("taskId") String taskId,
       @PathVariable("fieldName") String fieldName,
       @PathVariable("id") String id,
       Authentication authentication) {
     var getDocumentDto = GetDocumentDto.builder()
-        .processInstanceId(processInstanceId)
+        .rootProcessInstanceId(rootProcessInstanceId)
         .fieldName(fieldName)
         .taskId(taskId)
         .id(id)
@@ -140,17 +140,17 @@ public class DocumentController {
         .body(resource);
   }
 
-  @PostMapping("/{processInstanceId}/{taskId}/search")
+  @PostMapping("/{rootProcessInstanceId}/{taskId}/search")
   @Operation(summary = "Search documents metadata", description = "Returns list of documents metadata")
   public List<DocumentMetadataDto> searchMetadata(
       @RequestHeader(X_FORWARDED_HOST_HEADER) String originRequestUrl,
-      @PathVariable("processInstanceId") String processInstanceId,
+      @PathVariable("rootProcessInstanceId") String rootProcessInstanceId,
       @PathVariable("taskId") String taskId,
       @Valid @RequestBody DocumentMetadataSearchRequestDto requestDto,
       Authentication authentication) {
     var getDocumentsMetadataDto = GetDocumentsMetadataDto.builder()
         .documents(requestDto.getDocuments())
-        .processInstanceId(processInstanceId)
+        .rootProcessInstanceId(rootProcessInstanceId)
         .originRequestUrl(originRequestUrl)
         .taskId(taskId)
         .build();
@@ -161,28 +161,28 @@ public class DocumentController {
    * Endpoint that deletes all documents associated with specified process instance id. The endpoint
    * should be allowed only in internal network for system needs only as cleaning temporary data.
    *
-   * @param processInstanceId specified process instance id
+   * @param rootProcessInstanceId specified process instance id
    */
-  @DeleteMapping("/{processInstanceId}")
-  public void delete(@PathVariable("processInstanceId") String processInstanceId) {
-    documentFacade.delete(processInstanceId);
+  @DeleteMapping("/{rootProcessInstanceId}")
+  public void delete(@PathVariable("rootProcessInstanceId") String rootProcessInstanceId) {
+    documentFacade.delete(rootProcessInstanceId);
   }
 
   /**
    * Endpoint that deletes document associated with specified process instance id and file id.
    *
-   * @param processInstanceId specified process instance id
-   * @param fileId            specified file id
+   * @param rootProcessInstanceId specified process instance id
+   * @param fileId                specified file id
    */
-  @DeleteMapping("/{processInstanceId}/{taskId}/{fieldName}/{fileId}")
+  @DeleteMapping("/{rootProcessInstanceId}/{taskId}/{fieldName}/{fileId}")
   @Operation(summary = "Delete document by id")
-  public void deleteByFileId(@PathVariable("processInstanceId") String processInstanceId,
+  public void deleteByFileId(@PathVariable("rootProcessInstanceId") String rootProcessInstanceId,
       @PathVariable("taskId") String taskId,
       @PathVariable("fieldName") String fieldName,
       @PathVariable("fileId") String fileId,
       Authentication authentication) {
     var deleteDocumentDto = DeleteDocumentDto.builder()
-        .processInstanceId(processInstanceId)
+        .rootProcessInstanceId(rootProcessInstanceId)
         .fieldName(fieldName)
         .taskId(taskId)
         .id(fileId)

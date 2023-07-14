@@ -55,7 +55,7 @@ class InternalApiDocumentControllerIT extends BaseIT {
 
   private final String filename = "testImage.png";
   private final String contentType = "image/png";
-  private final String processInstanceId = "testProcessInstanceId";
+  private final String rootProcessInstanceId = "testProcessInstanceId";
   private final byte[] data = new byte[]{1, 2, 3};
 
 
@@ -86,7 +86,7 @@ class InternalApiDocumentControllerIT extends BaseIT {
         .remoteFileLocation(new URL(remoteFileRepository.url("/file.txt"))).filename(filename)
         .build();
 
-    mockMvc.perform(post(BASE_URL + "/" + processInstanceId)
+    mockMvc.perform(post(BASE_URL + "/" + rootProcessInstanceId)
             .header(JwtAuthenticationFilter.AUTHORIZATION_HEADER, accessToken)
             .content(objectMapper.writeValueAsString(payload))
             .contentType(MediaType.APPLICATION_JSON))
@@ -97,7 +97,7 @@ class InternalApiDocumentControllerIT extends BaseIT {
   @SneakyThrows
   void shouldReturnMetadata() {
     var uploadResponse = mockMvc.perform(
-            multipart("/internal-api/v2/documents/{processInstanceId}", processInstanceId)
+            multipart("/internal-api/v2/documents/{rootProcessInstanceId}", rootProcessInstanceId)
                 .file(new MockMultipartFile("file", filename, contentType, data))
                 .param("filename", filename)
                 .header(JwtAuthenticationFilter.AUTHORIZATION_HEADER, accessToken))
@@ -109,7 +109,7 @@ class InternalApiDocumentControllerIT extends BaseIT {
     var id = saveMetadata.getId();
 
     var metadataResponse = mockMvc.perform(
-            get("/internal-api/documents/{processInstanceId}/{id}/metadata", processInstanceId, id)
+            get("/internal-api/documents/{rootProcessInstanceId}/{id}/metadata", rootProcessInstanceId, id)
                 .header(JwtAuthenticationFilter.AUTHORIZATION_HEADER, accessToken)
                 .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
@@ -131,7 +131,7 @@ class InternalApiDocumentControllerIT extends BaseIT {
     var url = UriComponentsBuilder.newInstance().pathSegment("internal-api")
         .pathSegment("v2")
         .pathSegment("documents")
-        .pathSegment(processInstanceId)
+        .pathSegment(rootProcessInstanceId)
         .toUriString();
 
     var uploadResponse = mockMvc.perform(multipart(url)
@@ -147,7 +147,7 @@ class InternalApiDocumentControllerIT extends BaseIT {
 
     var uriBuilder = UriComponentsBuilder.newInstance().pathSegment("internal-api")
         .pathSegment("documents")
-        .pathSegment(processInstanceId)
+        .pathSegment(rootProcessInstanceId)
         .pathSegment(metadata.getId());
     var request = get(uriBuilder.toUriString()).accept(MediaType.APPLICATION_JSON_VALUE);
     request.header(JwtAuthenticationFilter.AUTHORIZATION_HEADER, accessToken);
@@ -167,7 +167,7 @@ class InternalApiDocumentControllerIT extends BaseIT {
         .remoteFileLocation(new URL(remoteFileRepository.url("/image.png"))).filename(filename)
         .build();
 
-    var responseAsStr = mockMvc.perform(post(BASE_URL + "/" + processInstanceId)
+    var responseAsStr = mockMvc.perform(post(BASE_URL + "/" + rootProcessInstanceId)
             .header(JwtAuthenticationFilter.AUTHORIZATION_HEADER, accessToken)
             .content(objectMapper.writeValueAsString(payload))
             .contentType(MediaType.APPLICATION_JSON))

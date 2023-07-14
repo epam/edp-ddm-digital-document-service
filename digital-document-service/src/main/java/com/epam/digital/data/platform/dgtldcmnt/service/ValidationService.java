@@ -80,7 +80,7 @@ public class ValidationService {
   }
 
   public void verifyTotalFilesSize(UploadDocumentFromUserFormDto uploadDto) {
-    var metadata = formDataFileStorageService.getMetadata(uploadDto.getProcessInstanceId());
+    var metadata = formDataFileStorageService.getMetadata(uploadDto.getRootProcessInstanceId());
     var otherFilesSize = metadata.stream()
         .filter(md -> uploadDto.getFormKey().equals(md.getFormKey()) &&
             uploadDto.getFieldName().equals(md.getFieldName()))

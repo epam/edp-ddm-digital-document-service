@@ -38,10 +38,10 @@ public class InternalApiDocumentControllerV2 {
 
   private final DocumentFacade documentFacade;
 
-  @PostMapping("/{processInstanceId}")
+  @PostMapping("/{rootProcessInstanceId}")
   @Operation(summary = "Upload MultiPart document", description = "Returns uploaded document metadata")
   public InternalApiDocumentMetadataDto upload(
-      @PathVariable("processInstanceId") String processInstanceId,
+      @PathVariable("rootProcessInstanceId") String rootProcessInstanceId,
       @RequestParam("file") MultipartFile file,
       @RequestParam(required = false, value = "filename") String filename) throws IOException {
     var documentDto = UploadDocumentFromUserFormDto.builder()
@@ -49,7 +49,7 @@ public class InternalApiDocumentControllerV2 {
         .size(file.getSize())
         .filename(Objects.isNull(filename) ? file.getOriginalFilename() : filename)
         .fileInputStream(new BufferedInputStream(file.getInputStream()))
-        .processInstanceId(processInstanceId)
+        .rootProcessInstanceId(rootProcessInstanceId)
         .build();
     return documentFacade.put(documentDto);
   }

@@ -60,15 +60,16 @@ public class CephDocumentService implements DocumentService {
   @Override
   public DocumentMetadataDto put(UploadDocumentFromUserFormDto uploadDocumentDto) {
     var id = UUID.randomUUID().toString();
-    log.debug("Uploading file {}, id {}, processInstanceId {}, taskId {}",
-        uploadDocumentDto.getFilename(), id, uploadDocumentDto.getProcessInstanceId(),
+    log.debug("Uploading file {}, id {}, rootProcessInstanceId {}, taskId {}",
+        uploadDocumentDto.getFilename(), id, uploadDocumentDto.getRootProcessInstanceId(),
         uploadDocumentDto.getTaskId());
     byte[] data = readBytes(uploadDocumentDto.getFileInputStream());
     var sha256hex = DigestUtils.sha256Hex(data);
     var fileMetadata = buildFileMetadata(id, sha256hex, uploadDocumentDto);
     var fileDataDto = FileDataDto.builder().content(new ByteArrayInputStream(data))
         .metadata(fileMetadata).build();
-    var savedFileMetadata = storage.save(uploadDocumentDto.getProcessInstanceId(), id, fileDataDto);
+    var savedFileMetadata = storage.save(uploadDocumentDto.getRootProcessInstanceId(), id,
+        fileDataDto);
     var url = generateGetDocumentUrl(id, uploadDocumentDto);
     log.debug("File {} uploaded. Id {}", uploadDocumentDto.getFilename(), id);
     return DocumentMetadataDto.builder()
@@ -84,7 +85,7 @@ public class CephDocumentService implements DocumentService {
   @Override
   public DocumentDto get(GetDocumentDto getDocumentDto) {
     log.debug("Getting document with id {}", getDocumentDto.getId());
-    var fileData = storage.loadByProcessInstanceIdAndId(getDocumentDto.getProcessInstanceId(),
+    var fileData = storage.loadByProcessInstanceIdAndId(getDocumentDto.getRootProcessInstanceId(),
         getDocumentDto.getId());
     log.debug("File downloaded. Id {}", getDocumentDto.getId());
     return DocumentDto.builder()
@@ -100,7 +101,7 @@ public class CephDocumentService implements DocumentService {
     log.debug("Getting documents metadata by ids {}", getMetadataDto.getDocuments());
     var documentIdAndFiledNameMap = getMetadataDto.getDocuments().stream()
         .collect(Collectors.toMap(DocumentIdDto::getId, DocumentIdDto::getFieldName));
-    var result = storage.getMetadata(getMetadataDto.getProcessInstanceId(),
+    var result = storage.getMetadata(getMetadataDto.getRootProcessInstanceId(),
             documentIdAndFiledNameMap.keySet()).stream()
         .map(objectMetadata -> map(objectMetadata, getMetadataDto, documentIdAndFiledNameMap))
         .collect(Collectors.toList());
@@ -109,9 +110,10 @@ public class CephDocumentService implements DocumentService {
   }
 
   @Override
-  public InternalApiDocumentMetadataDto getMetadata(String processInstanceId, String documentId) {
+  public InternalApiDocumentMetadataDto getMetadata(String rootProcessInstanceId,
+      String documentId) {
     log.debug("Getting document metadata by id {}", documentId);
-    var result = storage.getMetadata(processInstanceId, Set.of(documentId))
+    var result = storage.getMetadata(rootProcessInstanceId, Set.of(documentId))
         .stream()
         .map(mapper::toInternalApiDocumentMetadataDto)
         .collect(Collectors.toList());
@@ -120,35 +122,36 @@ public class CephDocumentService implements DocumentService {
   }
 
   @Override
-  public void delete(String processInstanceId) {
-    log.debug("Deleting all documents associated with process instance id {}", processInstanceId);
-    storage.deleteByProcessInstanceId(processInstanceId);
+  public void delete(String rootProcessInstanceId) {
+    log.debug("Deleting all documents associated with process instance id {}",
+        rootProcessInstanceId);
+    storage.deleteByProcessInstanceId(rootProcessInstanceId);
     log.debug("All documents associated with process instance id {} were deleted successfully",
-        processInstanceId);
+        rootProcessInstanceId);
   }
 
   @Override
-  public void delete(String processInstanceId, String fileId) {
+  public void delete(String rootProcessInstanceId, String fileId) {
     log.debug("Deleting document associated with process instance id {} and id {}",
-        processInstanceId, fileId);
-    storage.deleteByProcessInstanceIdAndId(processInstanceId, fileId);
+        rootProcessInstanceId, fileId);
+    storage.deleteByProcessInstanceIdAndId(rootProcessInstanceId, fileId);
     log.debug("Document associated with process instance id {} and id {} was deleted successfully",
-        processInstanceId, fileId);
+        rootProcessInstanceId, fileId);
   }
 
   private DocumentMetadataDto map(FileMetadataDto fileMetadataDto,
       GetDocumentsMetadataDto getMetadataDto, Map<String, String> documentIdAndFiledNameMap) {
     var id = fileMetadataDto.getId();
     var url = generateGetDocumentUrl(getMetadataDto.getOriginRequestUrl(),
-        getMetadataDto.getProcessInstanceId(), getMetadataDto.getTaskId(),
+        getMetadataDto.getRootProcessInstanceId(), getMetadataDto.getTaskId(),
         documentIdAndFiledNameMap.get(id), id);
     return mapper.toDocumentMetadataDto(fileMetadataDto, url);
   }
 
-  private String generateGetDocumentUrl(String host, String processInstanceId,
+  private String generateGetDocumentUrl(String host, String rootProcessInstanceId,
       String taskId, String fieldName, String id) {
     return UriComponentsBuilder.newInstance().scheme("https").host(host).pathSegment("documents")
-        .pathSegment(processInstanceId)
+        .pathSegment(rootProcessInstanceId)
         .pathSegment(taskId)
         .pathSegment(fieldName)
         .pathSegment(id)
@@ -158,7 +161,7 @@ public class CephDocumentService implements DocumentService {
   private String generateGetDocumentUrl(String fileId,
       UploadDocumentFromUserFormDto uploadDocumentDto) {
     return this.generateGetDocumentUrl(uploadDocumentDto.getOriginRequestUrl(),
-        uploadDocumentDto.getProcessInstanceId(), uploadDocumentDto.getTaskId(),
+        uploadDocumentDto.getRootProcessInstanceId(), uploadDocumentDto.getTaskId(),
         uploadDocumentDto.getFieldName(), fileId);
   }
 

@@ -48,7 +48,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class ValidationServiceTest {
 
   private final String taskId = "testTaskId";
-  private final String processInstanceId = "testProcessInstanceId";
+  private final String rootProcessInstanceId = "testProcessInstanceId";
   private final String fieldName = "testUpload1";
   private final String filePattern = "application/pdf";
   private final String formKey = "formKey";
@@ -75,7 +75,7 @@ class ValidationServiceTest {
   @Test
   void shouldValidate() {
     var uploadDto = UploadDocumentFromUserFormDto.builder()
-        .processInstanceId(processInstanceId)
+        .rootProcessInstanceId(rootProcessInstanceId)
         .contentType(filePattern)
         .fieldName(fieldName)
         .formKey(formKey)
@@ -86,7 +86,7 @@ class ValidationServiceTest {
         "formKey", formKey,
         "fieldName", fieldName
     ));
-    when(formDataFileStorageService.getMetadata(processInstanceId)).thenReturn(List.of(metadata));
+    when(formDataFileStorageService.getMetadata(rootProcessInstanceId)).thenReturn(List.of(metadata));
 
     validationService.validate(uploadDto);
   }
@@ -94,7 +94,7 @@ class ValidationServiceTest {
   @Test
   void shouldNotValidateBatchFileSizeExceedsMaxBatchFileSize() {
     var uploadDto = UploadDocumentFromUserFormDto.builder()
-        .processInstanceId(processInstanceId)
+        .rootProcessInstanceId(rootProcessInstanceId)
         .contentType(filePattern)
         .fieldName(fieldName)
         .formKey(formKey)
@@ -105,7 +105,7 @@ class ValidationServiceTest {
         "formKey", formKey,
         "fieldName", fieldName
     ));
-    when(formDataFileStorageService.getMetadata(processInstanceId)).thenReturn(List.of(metadata));
+    when(formDataFileStorageService.getMetadata(rootProcessInstanceId)).thenReturn(List.of(metadata));
 
     var exception = assertThrows(BatchFileMaxSizeException.class,
         () -> validationService.validate(uploadDto));
@@ -120,7 +120,7 @@ class ValidationServiceTest {
     var unsupportedContentType = "image/png";
     var errorMessage = "The type of the downloaded file is not supported.";
     var uploadDto = UploadDocumentFromUserFormDto.builder()
-        .processInstanceId(processInstanceId)
+        .rootProcessInstanceId(rootProcessInstanceId)
         .contentType(unsupportedContentType)
         .fieldName(fieldName)
         .formKey(formKey)

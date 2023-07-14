@@ -37,7 +37,7 @@ public class GetDocumentsMetadataDto {
   /**
    * The process instance id to whom documents belongs to.
    */
-  private String processInstanceId;
+  private String rootProcessInstanceId;
 
   /**
    * The origin forwarded request url.

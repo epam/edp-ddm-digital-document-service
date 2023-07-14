@@ -58,7 +58,7 @@ class DocumentControllerIT extends BaseIT {
   private final String filename = "test.pdf";
   private final String contentType = "application/pdf";
   private final String taskId = "testTaskId";
-  private final String processInstanceId = "testProcessInstanceId";
+  private final String rootProcessInstanceId = "testProcessInstanceId";
   private final String fieldName = "testUpload1";
   private final String formKey = "upload-test";
   private final byte[] data = new byte[]{1};
@@ -69,11 +69,11 @@ class DocumentControllerIT extends BaseIT {
   @BeforeEach
   public void init() {
     String assignee = tokenParser.parseClaims(accessToken).getPreferredUsername();
-    mockBpmsGetTaskById(taskId, assignee, processInstanceId, formKey);
+    mockBpmsGetTaskById(taskId, assignee, rootProcessInstanceId, formKey);
     mockCheckFieldNames(formKey);
     mockFormProviderGetFormMetadata(formKey, fieldName,
         "/json/testFormMetadata.json");
-    mockBpmsGetProcessInstanceById(processInstanceId);
+    mockBpmsGetProcessInstanceById(rootProcessInstanceId);
   }
 
   @Test
@@ -88,7 +88,7 @@ class DocumentControllerIT extends BaseIT {
     assertThat(response.getChecksum()).isEqualTo(DigestUtils.sha256Hex(data));
     var expectedUrl = UriComponentsBuilder.newInstance().scheme("https").host(host)
         .pathSegment("documents")
-        .pathSegment(processInstanceId)
+        .pathSegment(rootProcessInstanceId)
         .pathSegment(taskId)
         .pathSegment(fieldName)
         .pathSegment(response.getId())
@@ -104,7 +104,7 @@ class DocumentControllerIT extends BaseIT {
         .host("localhost")
         .port(port)
         .pathSegment("documents")
-        .pathSegment(contextDto.getProcessInstanceId())
+        .pathSegment(contextDto.getRootProcessInstanceId())
         .pathSegment(contextDto.getTaskId())
         .pathSegment(contextDto.getFieldName())
         .build()
@@ -154,7 +154,7 @@ class DocumentControllerIT extends BaseIT {
     assertThat(response.getChecksum()).isEqualTo(DigestUtils.sha256Hex(data));
     var expectedUrl = UriComponentsBuilder.newInstance().scheme("https").host(host)
         .pathSegment("documents")
-        .pathSegment(processInstanceId)
+        .pathSegment(rootProcessInstanceId)
         .pathSegment(taskId)
         .pathSegment(hygienistCertificateFile)
         .pathSegment(response.getId())
@@ -169,7 +169,7 @@ class DocumentControllerIT extends BaseIT {
     var id = documentMetadataDto.getId();
 
     var uriBuilder = UriComponentsBuilder.newInstance().pathSegment("documents")
-        .pathSegment(processInstanceId)
+        .pathSegment(rootProcessInstanceId)
         .pathSegment(taskId)
         .pathSegment(fieldName)
         .pathSegment(id);
@@ -192,7 +192,7 @@ class DocumentControllerIT extends BaseIT {
     var id = documentMetadataDto.getId();
 
     var urlBuilder = UriComponentsBuilder.newInstance().pathSegment("documents")
-        .pathSegment(processInstanceId)
+        .pathSegment(rootProcessInstanceId)
         .pathSegment(taskId)
         .pathSegment("search");
     var response = performPost(urlBuilder.toUriString(),
@@ -209,7 +209,7 @@ class DocumentControllerIT extends BaseIT {
     assertThat(response.get(0).getChecksum()).isEqualTo(DigestUtils.sha256Hex(data));
     var expectedUrl = UriComponentsBuilder.newInstance().scheme("https").host(host)
         .pathSegment("documents")
-        .pathSegment(processInstanceId)
+        .pathSegment(rootProcessInstanceId)
         .pathSegment(taskId)
         .pathSegment(fieldName)
         .pathSegment(id)
@@ -227,7 +227,7 @@ class DocumentControllerIT extends BaseIT {
     var id = documentMetadataDto.getId();
 
     var urlBuilder = UriComponentsBuilder.newInstance().pathSegment("documents")
-        .pathSegment(processInstanceId)
+        .pathSegment(rootProcessInstanceId)
         .pathSegment(taskId)
         .pathSegment("search");
     var response = performPost(urlBuilder.toUriString(),
@@ -248,13 +248,13 @@ class DocumentControllerIT extends BaseIT {
     var id = documentMetadataDto.getId();
 
     var deleteUrl = UriComponentsBuilder.newInstance().pathSegment("documents")
-        .pathSegment(processInstanceId).toUriString();
+        .pathSegment(rootProcessInstanceId).toUriString();
     var deleteReq = delete(deleteUrl);
     deleteReq.header(JwtAuthenticationFilter.AUTHORIZATION_HEADER, accessToken);
     mockMvc.perform(deleteReq).andExpect(status().isOk());
 
     var uriBuilder = UriComponentsBuilder.newInstance().pathSegment("documents")
-        .pathSegment(processInstanceId)
+        .pathSegment(rootProcessInstanceId)
         .pathSegment(taskId)
         .pathSegment(fieldName)
         .pathSegment(id);
@@ -270,7 +270,7 @@ class DocumentControllerIT extends BaseIT {
     var id = documentMetadataDto.getId();
 
     var deleteUrl = UriComponentsBuilder.newInstance().pathSegment("documents")
-        .pathSegment(processInstanceId)
+        .pathSegment(rootProcessInstanceId)
         .pathSegment(taskId)
         .pathSegment(fieldName)
         .pathSegment(id)
@@ -280,7 +280,7 @@ class DocumentControllerIT extends BaseIT {
     mockMvc.perform(deleteReq).andExpect(status().isOk());
 
     var uriBuilder = UriComponentsBuilder.newInstance().pathSegment("documents")
-        .pathSegment(processInstanceId)
+        .pathSegment(rootProcessInstanceId)
         .pathSegment(taskId)
         .pathSegment(fieldName)
         .pathSegment(id);
@@ -295,7 +295,7 @@ class DocumentControllerIT extends BaseIT {
       UploadDocumentFromUserFormDto contextDto) {
 
     var url = UriComponentsBuilder.newInstance().pathSegment("documents")
-        .pathSegment(contextDto.getProcessInstanceId())
+        .pathSegment(contextDto.getRootProcessInstanceId())
         .pathSegment(contextDto.getTaskId())
         .pathSegment(contextDto.getFieldName())
         .toUriString();
@@ -313,20 +313,20 @@ class DocumentControllerIT extends BaseIT {
 
   private UploadDocumentFromUserFormDto createDocumentContextDto() {
     return UploadDocumentFromUserFormDto.builder()
-        .processInstanceId(processInstanceId)
+        .rootProcessInstanceId(rootProcessInstanceId)
         .fieldName(fieldName)
         .taskId(taskId)
         .build();
   }
 
   @SneakyThrows
-  private void mockBpmsGetTaskById(String taskId, String assignee, String processInstanceId,
+  private void mockBpmsGetTaskById(String taskId, String assignee, String rootProcessInstanceId,
       String formKey) {
     var taskById = new DdmSignableTaskDto();
     taskById.setFormKey(formKey);
     taskById.setId(taskId);
     taskById.setAssignee(assignee);
-    taskById.setProcessInstanceId(processInstanceId);
+    taskById.setRootProcessInstanceId(rootProcessInstanceId);
     bpmServer.addStubMapping(
         stubFor(WireMock.get(urlPathEqualTo("/api/extended/task/" + taskId))
             .willReturn(aResponse()
@@ -337,13 +337,13 @@ class DocumentControllerIT extends BaseIT {
     );
   }
 
-  private void mockBpmsGetProcessInstanceById(String processInstanceId) {
+  private void mockBpmsGetProcessInstanceById(String rootProcessInstanceId) {
     bpmServer.addStubMapping(
-        stubFor(WireMock.get(urlPathEqualTo("/api/history/process-instance/" + processInstanceId))
+        stubFor(WireMock.get(urlPathEqualTo("/api/history/process-instance/" + rootProcessInstanceId))
             .willReturn(aResponse()
                 .withHeader("Content-Type", "application/json")
                 .withStatus(200)
-                .withBody("{\"id\": \"" + processInstanceId + "\", \"state\": \"ACTIVE\"}"))));
+                .withBody("{\"id\": \"" + rootProcessInstanceId + "\", \"state\": \"ACTIVE\"}"))));
   }
 
   @SneakyThrows
