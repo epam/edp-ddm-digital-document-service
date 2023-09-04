@@ -10,7 +10,9 @@ spec:
   selector:
     matchLabels:
       app: {{ .Chart.Name }}
-  replicas: {{ .Values.replicas }}
+  {{- if not .Values.global.registry.digitalDocumentService.hpa.enabled }}
+  replicas: {{ .Values.global.registry.digitalDocumentService.replicas }}
+  {{- end }}
   strategy:
     rollingUpdate:
       maxSurge: 25%
@@ -24,6 +26,7 @@ spec:
         {{ $key }}: {{ $value | quote }}
         {{- end }}
         {{- if .Values.global.registry.digitalDocumentService.istio.sidecar.enabled }}
+        traffic.sidecar.istio.io/excludeOutboundPorts: '9092,9093'
         sidecar.istio.io/inject: 'true'
         {{- include "digitalDocumentService.istioResources" . | nindent 8 }}
         {{- end }}
@@ -32,6 +35,11 @@ spec:
         app: {{ .Chart.Name }}
         collect.logs: "json"
     spec:
+      initContainers:
+        - command: [ 'sh', '-c', 'while ! nc -w 1 {{ .Values.kafka.service | replace "http://" "" }} </dev/null; do echo waiting for kafka-cluster-kafka-bootstrap; sleep 5; done;' ]
+          image: busybox
+          imagePullPolicy: IfNotPresent
+          name: kafka-cluster-kafka-bootstrap-init
       containers:
       - name: {{ .Chart.Name }}
         image: "{{ .Values.image.name }}:{{ .Values.image.version }}"
@@ -56,10 +64,10 @@ spec:
           periodSeconds: 10
           successThreshold: 1
           timeoutSeconds: 5
-        {{- if not .Values.global.disableRequestsLimits }}  
+        {{- if or .Values.global.registry.digitalDocumentService.container.resources.requests .Values.global.registry.digitalDocumentService.container.resources.limits }}
         resources:
           {{- toYaml .Values.global.registry.digitalDocumentService.container.resources | nindent 10 }}
-        {{- end }}    
+        {{- end }}
         env:
           {{- range $name, $value := .Values.global.registry.digitalDocumentService.container.envVars }}
           - name: {{ $name }}
@@ -80,6 +88,21 @@ spec:
               configMapKeyRef:
                 name: {{ .Values.ceph.bucketName }}
                 key: BUCKET_NAME
+          - name: KAFKA_USER_KEYSTORE_CERTIFICATE
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.kafka.user }}
+                key: user.crt
+          - name: KAFKA_USER_KEYSTORE_KEY
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.kafka.user }}
+                key: user.key
+          - name: KAFKA_CLUSTER_TRUSTSTORE
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.kafka.clusterName }}-cluster-ca-cert
+                key: ca.crt
         volumeMounts:
           - name: {{ .Chart.Name }}
             mountPath: {{ .Values.appConfigMountPath }}

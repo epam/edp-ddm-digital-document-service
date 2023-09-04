@@ -290,6 +290,30 @@ class DocumentControllerIT extends BaseIT {
     mockMvc.perform(request).andExpect(status().is4xxClientError());
   }
 
+  @Test
+  void shouldSearchMetadataOfExistingKeys() {
+    var documentMetadataDto = uploadFile(filename, contentType, data, createDocumentContextDto());
+    var id = documentMetadataDto.getId();
+
+    var urlBuilder = UriComponentsBuilder.newInstance().pathSegment("documents")
+        .pathSegment(rootProcessInstanceId)
+        .pathSegment(taskId)
+        .pathSegment("search");
+    var response = performPost(urlBuilder.toUriString(),
+        DocumentMetadataSearchRequestDto.builder()
+            .documents(List.of(DocumentIdDto.builder().id(id).fieldName(fieldName).build(),
+                DocumentIdDto.builder().id("missingFileId").fieldName("missingFileName").build()))
+            .build(),
+        new TypeReference<List<DocumentMetadataDto>>() {
+        });
+
+    assertThat(response).isNotNull();
+    assertThat(response.size()).isOne();
+    assertThat(response.get(0).getName()).isEqualTo(filename);
+    assertThat(response.get(0).getType()).isEqualTo(contentType);
+    assertThat(response.get(0).getChecksum()).isEqualTo(DigestUtils.sha256Hex(data));
+  }
+
   @SneakyThrows
   private DocumentMetadataDto uploadFile(String filename, String contentType, byte[] data,
       UploadDocumentFromUserFormDto contextDto) {

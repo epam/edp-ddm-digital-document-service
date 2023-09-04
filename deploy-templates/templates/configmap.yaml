@@ -19,3 +19,22 @@ data:
     digital-documents:
       max-file-size: {{ .Values.digitalDocuments.maxFileSize }}
       max-total-file-size: {{ .Values.digitalDocuments.maxTotalFileSize }}
+
+    data-platform:
+      kafka:
+        enabled: true
+        bootstrap: {{ .Values.kafka.service }}
+        topic-properties:
+          num-partitions: {{ .Values.kafka.numPartitions }}
+          replication-factor: {{ .Values.global.kafkaOperator.replicationFactor }}
+        ssl:
+          enabled: {{ .Values.kafka.sslEnabled }}
+          keystore-certificate: {{ .Values.kafka.sslUserCertificate }}
+          keystore-key: {{ .Values.kafka.sslUserKey }}
+          truststore-certificate: {{ .Values.kafka.sslClusterCertificate }}
+          keystore-type: {{ .Values.kafka.sslCertType }}
+          truststore-type: {{ .Values.kafka.sslCertType }}
+        error-handler:
+          initial-interval: {{ .Values.kafka.errorHandlerInitialInterval }}
+          max-elapsed-time: {{ .Values.kafka.errorHandlerMaxElapsedTime }}
+          multiplier: {{ .Values.kafka.errorHandlerMultiplier }}

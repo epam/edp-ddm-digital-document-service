@@ -76,3 +76,23 @@ digital-documents:
   max-total-file-size: 100MB
   content:
     disposition-type: attachment
+
+data-platform:
+  kafka:
+    producer:
+      enabled: false
+    consumer:
+      enabled: true
+      group-id: digital-document-service
+      key-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      trusted-packages:
+        - com.epam.digital.data.platform.bpms.api.dto
+      custom-config:
+        "[spring.deserializer.key.delegate.class]": org.apache.kafka.common.serialization.StringDeserializer
+        "[spring.deserializer.value.delegate.class]": org.springframework.kafka.support.serializer.JsonDeserializer
+    topic-properties:
+      creation:
+        enabled: false
+    topics:
+      lowcode-file-storage-cleanup-topic: bpm-lowcode-file-storage-cleanup

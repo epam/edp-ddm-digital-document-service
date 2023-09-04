@@ -22,9 +22,7 @@ import com.epam.digital.data.platform.integration.ceph.model.CephObject;
 import com.epam.digital.data.platform.integration.ceph.model.CephObjectMetadata;
 import com.epam.digital.data.platform.integration.ceph.service.CephService;
 import java.io.InputStream;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -32,9 +30,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
-import org.springframework.stereotype.Service;
 
-@Service
 public class TestS3ObjectCephService implements CephService {
 
   private final Map<String, S3Object> storage = new HashMap<>();
@@ -81,20 +77,18 @@ public class TestS3ObjectCephService implements CephService {
 
   @Override
   public Optional<String> getAsString(String s, String s1) {
-    return Optional.empty();
+    throw new UnsupportedOperationException("Not used in tests");
   }
 
   @Override
   public void put(String cephBucketName, String key, String content) {
+    throw new UnsupportedOperationException("Not used in tests");
   }
 
   @Override
   public List<CephObjectMetadata> getMetadata(String cephBucketName, Set<String> keys) {
-    boolean allContains = keys.stream().allMatch(storage::containsKey);
-    if (!allContains) {
-      return Collections.emptyList();
-    }
-    var objectMetadata = keys.stream().map(k -> storage.get(k).getObjectMetadata())
+    var objectMetadata = keys.stream().filter(storage::containsKey)
+        .map(k -> storage.get(k).getObjectMetadata())
         .collect(Collectors.toList());
     return toCephObjectMetadataList(objectMetadata);
   }
@@ -112,7 +106,8 @@ public class TestS3ObjectCephService implements CephService {
   public CephObjectMetadata setUserMetadata(String cephBucketName, String key,
       Map<String, String> userMetadata) {
     var s3Object = storage.containsKey(key) ? storage.get(key) : new S3Object();
-    ObjectMetadata objectMetadata = Objects.isNull(s3Object.getObjectMetadata()) ? new ObjectMetadata()
+    ObjectMetadata objectMetadata =
+        Objects.isNull(s3Object.getObjectMetadata()) ? new ObjectMetadata()
             : s3Object.getObjectMetadata();
     objectMetadata.setUserMetadata(userMetadata);
     s3Object.setObjectMetadata(objectMetadata);
@@ -142,7 +137,7 @@ public class TestS3ObjectCephService implements CephService {
 
   @Override
   public Set<String> getKeys(String cephBucketName) {
-    return new HashSet<>();
+    throw new UnsupportedOperationException("Not used in tests");
   }
 
   private List<CephObjectMetadata> toCephObjectMetadataList(
