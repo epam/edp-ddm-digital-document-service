@@ -93,6 +93,6 @@ data-platform:
         "[spring.deserializer.value.delegate.class]": org.springframework.kafka.support.serializer.JsonDeserializer
     topic-properties:
       creation:
-        enabled: false
+        enabled: true
     topics:
       lowcode-file-storage-cleanup-topic: bpm-lowcode-file-storage-cleanup

@@ -28,7 +28,11 @@ spec:
         {{- if .Values.global.registry.digitalDocumentService.istio.sidecar.enabled }}
         traffic.sidecar.istio.io/excludeOutboundPorts: '9092,9093'
         sidecar.istio.io/inject: 'true'
+        {{- if .Values.global.istio.sidecar.requestsLimitsEnabled }}
         {{- include "digitalDocumentService.istioResources" . | nindent 8 }}
+        {{- else }}
+        inject.istio.io/templates: 'sidecar,emptyRequestsLimits'
+        {{- end }}
         {{- end }}
       {{- end }}
       labels:
@@ -50,6 +54,9 @@ spec:
           httpGet:
             path: {{ .Values.livenessPath }}
             port: {{ .Values.port }}
+            httpHeaders:
+              - name: X-B3-Sampled
+                value: "0"
           failureThreshold: 10
           initialDelaySeconds: 70
           periodSeconds: 10
@@ -59,19 +66,22 @@ spec:
           httpGet:
             path: {{ .Values.readinessPath }}
             port: {{ .Values.port }}
+            httpHeaders:
+              - name: X-B3-Sampled
+                value: "0"
           failureThreshold: 10
           initialDelaySeconds: 70
           periodSeconds: 10
           successThreshold: 1
           timeoutSeconds: 5
-        {{- if or .Values.global.registry.digitalDocumentService.container.resources.requests .Values.global.registry.digitalDocumentService.container.resources.limits }}
+        {{- if .Values.global.container.requestsLimitsEnabled }}
         resources:
           {{- toYaml .Values.global.registry.digitalDocumentService.container.resources | nindent 10 }}
         {{- end }}
         env:
           {{- range $name, $value := .Values.global.registry.digitalDocumentService.container.envVars }}
           - name: {{ $name }}
-            value: {{ $value | quote}}
+            value: {{ $value | quote }}
           {{- end }}
           - name: CEPH_BUCKET_HOST
             valueFrom:

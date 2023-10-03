@@ -27,6 +27,11 @@ data-platform:
         "[enable.idempotence]": true
     topic-properties:
       creation:
-        enabled: true
+        enabled: false
         num-partitions: 2
         replication-factor: 1
+
+platform:
+  security:
+    whitelist:
+      - /v3/api-docs.yaml

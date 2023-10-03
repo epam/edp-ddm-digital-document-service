@@ -88,7 +88,7 @@ class DigitalDocumentMediaTypeDetectorTest {
     Mockito.verify(defaultDetector)
         .detect(Mockito.refEq(new BufferedInputStream(inputStream)), Mockito.eq(metadata));
     Mockito.verify(metadata).get(TikaCoreProperties.RESOURCE_NAME_KEY);
-    Mockito.verify(inputStream).mark(65);
+    Mockito.verify(inputStream).mark(65601);
     Mockito.verify(inputStream).readNBytes(65);
     Mockito.verify(inputStream).reset();
   }

@@ -69,6 +69,7 @@ class AllowedUploadedDocumentValidatorTest {
       "image/png,file.png,image/png",
       "text/csv,file.csv,text/csv",
       "application/pkcs7-signature,file.docx.p7s,application/pkcs7-signature",
+      "application/pkcs7-signature,file.docx.p7s,application/octet-stream",
       "application/octet-stream,file.pdf.asics,application/octet-stream",
       "application/vnd.etsi.asic-s+zip,file.pdf.asics,application/octet-stream"
   })
@@ -81,7 +82,7 @@ class AllowedUploadedDocumentValidatorTest {
         .build();
     Mockito.doReturn(detectedContentType).when(tika).detect(inputStream, filename);
 
-    final var validator = new AllowedUploadedDocumentValidator(tika, true, false);
+    final var validator = new AllowedUploadedDocumentValidator(tika, true, true);
 
     Assertions.assertThat(validator.isValid(uploadDocumentDto, context)).isTrue();
     Mockito.verify(tika).detect(inputStream, filename);

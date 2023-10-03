@@ -60,7 +60,12 @@ public class DigitalDocumentMediaTypeDetector implements Detector {
       log.trace("Filename extension is not '{}'. "
               + "Skip first '{}' bytes in input stream and detect again",
           DocumentConstants.P7S_EXTENSION, SIGNATURE_BYTES_LENGTH);
-      input.mark(SIGNATURE_BYTES_LENGTH);
+
+      // The value is calculated based on the minimum required value of the MimeTypes detector.
+      var mimeTypesDetectorMinLength = (64 * 1024) + SIGNATURE_BYTES_LENGTH;
+
+      input.mark(mimeTypesDetectorMinLength);
+
       // file is signed so skip first 65 bytes and detect again
       try {
         input.readNBytes(SIGNATURE_BYTES_LENGTH);
