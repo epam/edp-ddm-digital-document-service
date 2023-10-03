@@ -41,7 +41,7 @@ Available properties are following:
 ### Test execution
 
 * Tests could be run via maven command:
-    * `mvn verify` OR using appropriate functions of your IDE.
+    * `mvn verify` OR using appropriate functions of your IDE. To avoid `The filename or extension is too long` error on Windows, please uncomment `<fork>false</fork>` in `spring-boot-maven-plugin` configuration
 
 ### License
 

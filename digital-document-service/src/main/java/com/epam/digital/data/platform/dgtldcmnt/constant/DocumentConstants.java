@@ -32,7 +32,7 @@ public final class DocumentConstants {
       "image/png", Set.of("png"),
       "image/jpeg", Set.of("jpg", "jpeg"),
       "text/csv", Set.of("csv"),
-      "application/octet-stream", Set.of("asics"),
+      "application/octet-stream", Set.of(P7S_EXTENSION, "asics"),
       SIGNATURE_TYPE, Set.of(P7S_EXTENSION)
   );
 
@@ -42,7 +42,7 @@ public final class DocumentConstants {
       .collect(Collectors.toList());
 
   public static final Map<String, Set<String>> CORRESPONDED_MEDIA_TYPES = Map.of(
-      "application/octet-stream", Set.of("application/vnd.etsi.asic-s+zip")
+      "application/octet-stream", Set.of(SIGNATURE_TYPE, "application/vnd.etsi.asic-s+zip")
   );
 
   private DocumentConstants() {
