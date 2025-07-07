@@ -16,6 +16,7 @@
 
 package com.epam.digital.data.platform.dgtldcmnt.service;
 
+import com.epam.digital.data.platform.dgtldcmnt.compression.ImageCompressor;
 import com.epam.digital.data.platform.dgtldcmnt.dto.DocumentDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.DocumentIdDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.DocumentMetadataDto;
@@ -23,10 +24,18 @@ import com.epam.digital.data.platform.dgtldcmnt.dto.GetDocumentDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.GetDocumentsMetadataDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.InternalApiDocumentMetadataDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentFromUserFormDto;
+import com.epam.digital.data.platform.dgtldcmnt.exception.FileCompressionException;
 import com.epam.digital.data.platform.dgtldcmnt.mapper.DocumentMetadataDtoMapper;
 import com.epam.digital.data.platform.storage.file.dto.FileDataDto;
 import com.epam.digital.data.platform.storage.file.dto.FileMetadataDto;
 import com.epam.digital.data.platform.storage.file.service.FormDataFileStorageService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+import org.springframework.web.util.UriComponentsBuilder;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,16 +44,11 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.digest.DigestUtils;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * The service for management of the documents based on ceph storage.
@@ -56,6 +60,7 @@ public class CephDocumentService implements DocumentService {
 
   private final FormDataFileStorageService storage;
   private final DocumentMetadataDtoMapper mapper;
+  private final List<ImageCompressor> imageCompressors;
 
   @Override
   public DocumentMetadataDto put(UploadDocumentFromUserFormDto uploadDocumentDto) {
@@ -63,6 +68,9 @@ public class CephDocumentService implements DocumentService {
     log.debug("Uploading file {}, id {}, rootProcessInstanceId {}, taskId {}",
         uploadDocumentDto.getFilename(), id, uploadDocumentDto.getRootProcessInstanceId(),
         uploadDocumentDto.getTaskId());
+
+    compressFile(uploadDocumentDto);
+
     byte[] data = readBytes(uploadDocumentDto.getFileInputStream());
     var sha256hex = DigestUtils.sha256Hex(data);
     var fileMetadata = buildFileMetadata(id, sha256hex, uploadDocumentDto);
@@ -111,7 +119,7 @@ public class CephDocumentService implements DocumentService {
 
   @Override
   public InternalApiDocumentMetadataDto getMetadata(String rootProcessInstanceId,
-      String documentId) {
+                                                    String documentId) {
     log.debug("Getting document metadata by id {}", documentId);
     var result = storage.getMetadata(rootProcessInstanceId, Set.of(documentId))
         .stream()
@@ -140,7 +148,7 @@ public class CephDocumentService implements DocumentService {
   }
 
   private DocumentMetadataDto map(FileMetadataDto fileMetadataDto,
-      GetDocumentsMetadataDto getMetadataDto, Map<String, String> documentIdAndFiledNameMap) {
+                                  GetDocumentsMetadataDto getMetadataDto, Map<String, String> documentIdAndFiledNameMap) {
     var id = fileMetadataDto.getId();
     var url = generateGetDocumentUrl(getMetadataDto.getOriginRequestUrl(),
         getMetadataDto.getRootProcessInstanceId(), getMetadataDto.getTaskId(),
@@ -149,7 +157,7 @@ public class CephDocumentService implements DocumentService {
   }
 
   private String generateGetDocumentUrl(String host, String rootProcessInstanceId,
-      String taskId, String fieldName, String id) {
+                                        String taskId, String fieldName, String id) {
     return UriComponentsBuilder.newInstance().scheme("https").host(host).pathSegment("documents")
         .pathSegment(rootProcessInstanceId)
         .pathSegment(taskId)
@@ -159,7 +167,7 @@ public class CephDocumentService implements DocumentService {
   }
 
   private String generateGetDocumentUrl(String fileId,
-      UploadDocumentFromUserFormDto uploadDocumentDto) {
+                                        UploadDocumentFromUserFormDto uploadDocumentDto) {
     return this.generateGetDocumentUrl(uploadDocumentDto.getOriginRequestUrl(),
         uploadDocumentDto.getRootProcessInstanceId(), uploadDocumentDto.getTaskId(),
         uploadDocumentDto.getFieldName(), fileId);
@@ -184,7 +192,7 @@ public class CephDocumentService implements DocumentService {
   }
 
   private FileMetadataDto buildFileMetadata(String id, String checksum,
-      UploadDocumentFromUserFormDto uploadDocumentDto) {
+                                            UploadDocumentFromUserFormDto uploadDocumentDto) {
     return FileMetadataDto.builder()
         .filename(encodeUtf8(uploadDocumentDto.getFilename()))
         .contentType(uploadDocumentDto.getContentType())
@@ -192,7 +200,41 @@ public class CephDocumentService implements DocumentService {
         .fieldName(uploadDocumentDto.getFieldName())
         .formKey(uploadDocumentDto.getFormKey())
         .checksum(checksum)
+        .imageMaxWidth(uploadDocumentDto.getImageMaxWidth())
+        .imageMaxHeight(uploadDocumentDto.getImageMaxHeight())
+        .compressionQuality(uploadDocumentDto.getCompressionQuality())
         .id(id)
         .build();
+  }
+
+  private void compressFile(UploadDocumentFromUserFormDto uploadDocumentDto) {
+    var filename = uploadDocumentDto.getFilename();
+    var fileSize = uploadDocumentDto.getSize();
+    var originalInputStream = uploadDocumentDto.getFileInputStream();
+
+    var compressorParams = mapper.toFileCompressorParameters(uploadDocumentDto);
+
+    imageCompressors.stream()
+        .filter(compressor -> compressor.canCompress(filename, fileSize, originalInputStream))
+        .forEach(compressor -> {
+          try {
+            var compressedInputStream = compressor.compress(filename, originalInputStream, compressorParams);
+            if (compressedInputStream.available() <= originalInputStream.available()) {
+              uploadDocumentDto.setFileInputStream(compressedInputStream);
+              uploadDocumentDto.setSize(compressedInputStream.available());
+              if(Objects.isNull(uploadDocumentDto.getImageMaxWidth())) {
+                uploadDocumentDto.setImageMaxWidth(compressor.getImageMaxWidth());
+              }
+              if(Objects.isNull(uploadDocumentDto.getImageMaxHeight())) {
+                uploadDocumentDto.setImageMaxHeight(compressor.getImageMaxHeight());
+              }
+              if(Objects.isNull(uploadDocumentDto.getCompressionQuality())) {
+                uploadDocumentDto.setCompressionQuality(compressor.getCompressionQuality());
+              }
+            }
+          } catch (IOException e) {
+            throw new FileCompressionException("Failed to read file", e);
+          }
+        });
   }
 }

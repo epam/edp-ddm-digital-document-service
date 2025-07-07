@@ -69,7 +69,7 @@ class CephDocumentServiceTest {
 
   @BeforeEach
   public void init() {
-    service = new CephDocumentService(fromDataFileStorageService, mapper);
+    service = new CephDocumentService(fromDataFileStorageService, mapper, List.of());
   }
 
   @Test

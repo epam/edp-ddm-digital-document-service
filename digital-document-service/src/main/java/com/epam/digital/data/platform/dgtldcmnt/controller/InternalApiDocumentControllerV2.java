@@ -98,13 +98,19 @@ public class InternalApiDocumentControllerV2 {
   public InternalApiDocumentMetadataDto upload(
       @PathVariable("rootProcessInstanceId") String rootProcessInstanceId,
       @RequestParam("file") MultipartFile file,
-      @RequestParam(required = false, value = "filename") String filename) throws IOException {
+      @RequestParam(required = false, value = "filename") String filename,
+      @RequestParam(required = false, name = "imageMaxWidth") Integer imageMaxWidth,
+      @RequestParam(required = false, name = "imageMaxHeight") Integer imageMaxHeight,
+      @RequestParam(required = false, name = "compressionQuality") Integer compressionQuality) throws IOException {
     var documentDto = UploadDocumentFromUserFormDto.builder()
         .contentType(file.getContentType())
         .size(file.getSize())
         .filename(Objects.isNull(filename) ? file.getOriginalFilename() : filename)
         .fileInputStream(new BufferedInputStream(file.getInputStream()))
         .rootProcessInstanceId(rootProcessInstanceId)
+        .imageMaxWidth(imageMaxWidth)
+        .imageMaxHeight(imageMaxHeight)
+        .compressionQuality(compressionQuality)
         .build();
     return documentFacade.put(documentDto);
   }

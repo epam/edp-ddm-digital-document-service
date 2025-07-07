@@ -18,11 +18,13 @@ package com.epam.digital.data.platform.dgtldcmnt.validator;
 
 import com.epam.digital.data.platform.dgtldcmnt.constant.DocumentConstants;
 import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentDto;
+
 import java.io.IOException;
 import java.util.Objects;
 import java.util.Set;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
@@ -56,7 +58,7 @@ public class AllowedUploadedDocumentValidator implements
   private final boolean signedFileDetectionEnabled;
 
   private boolean isFilenameExtensionValid(UploadDocumentDto uploadDocumentDto,
-      ConstraintValidatorContext context) {
+                                           ConstraintValidatorContext context) {
     log.debug("Validating filename extension for process-instance '{}'",
         uploadDocumentDto.getRootProcessInstanceId());
     final var contentType = uploadDocumentDto.getContentType();
@@ -141,11 +143,41 @@ public class AllowedUploadedDocumentValidator implements
     return isValid;
   }
 
+  private boolean areCompressionParametersValid(UploadDocumentDto uploadDocumentDto, ConstraintValidatorContext context) {
+    if (Objects.nonNull(uploadDocumentDto.getImageMaxWidth()) && uploadDocumentDto.getImageMaxWidth() < 0) {
+      context.buildConstraintViolationWithTemplate("Image max width should be greater than 0")
+          .addPropertyNode("imageMaxWidth")
+          .addConstraintViolation()
+          .disableDefaultConstraintViolation();
+      return false;
+    }
+
+    if (Objects.nonNull(uploadDocumentDto.getImageMaxHeight()) && uploadDocumentDto.getImageMaxHeight() < 0) {
+      context.buildConstraintViolationWithTemplate("Image max height should be greater than 0")
+          .addPropertyNode("imageMaxHeight")
+          .addConstraintViolation()
+          .disableDefaultConstraintViolation();
+      return false;
+    }
+
+    if (Objects.nonNull(uploadDocumentDto.getCompressionQuality()) && (uploadDocumentDto.getCompressionQuality() <= 0 || uploadDocumentDto.getCompressionQuality() > 100)) {
+      context.buildConstraintViolationWithTemplate("Compression quality should be between 0 and 100")
+          .addPropertyNode("compressionQuality")
+          .addConstraintViolation()
+          .disableDefaultConstraintViolation();
+      return false;
+    }
+
+    return true;
+  }
+
   @Override
   public boolean isValid(UploadDocumentDto value, ConstraintValidatorContext context) {
     log.debug("Validating input document. Process-instance - '{}'. Validation enabled - '{}'",
         value.getRootProcessInstanceId(), mediaTypeValidationEnabled);
-    var isValid = !mediaTypeValidationEnabled || (isFilenameExtensionValid(value, context)
+    var isValid = areCompressionParametersValid(value, context);
+
+    isValid &= !mediaTypeValidationEnabled || (isFilenameExtensionValid(value, context)
         && isDetectedFileContentTypeEqualsToInputContentType(value, context));
     log.debug("Input document for process '{}' is valid - '{}'.", value.getRootProcessInstanceId(),
         isValid);

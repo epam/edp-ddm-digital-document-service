@@ -41,4 +41,11 @@ public class UploadDocumentDto {
    * The process instance id to whom the document belongs to. It is used for authorization.
    */
   private String rootProcessInstanceId;
+
+  /**
+   * Compression parameters
+   */
+  private Integer imageMaxWidth;
+  private Integer imageMaxHeight;
+  private Integer compressionQuality;
 }

@@ -19,7 +19,21 @@ data:
     digital-documents:
       max-file-size: {{ .Values.digitalDocuments.maxFileSize }}
       max-total-file-size: {{ .Values.digitalDocuments.maxTotalFileSize }}
-
+      {{- if .Values.global.registry.digitalDocumentService.compressionParams }}
+      compression-params:
+        {{- if .Values.global.registry.digitalDocumentService.compressionParams.imageMaxWidth }}
+        image-max-width: {{ .Values.global.registry.digitalDocumentService.compressionParams.imageMaxWidth }}
+        {{- end }}
+        {{- if .Values.global.registry.digitalDocumentService.compressionParams.imageMaxHeight }}
+        image-max-height: {{ .Values.global.registry.digitalDocumentService.compressionParams.imageMaxHeight }}
+        {{- end }}
+        {{- if .Values.global.registry.digitalDocumentService.compressionParams.compressionQuality }}
+        compression-quality: {{ .Values.global.registry.digitalDocumentService.compressionParams.compressionQuality }}
+        {{- end }}
+        {{- if .Values.global.registry.digitalDocumentService.compressionParams.minCompressibleFileSize }}
+        min-compressible-file-size: {{ .Values.global.registry.digitalDocumentService.compressionParams.minCompressibleFileSize }}
+        {{- end }}
+      {{- end }}
     data-platform:
       kafka:
         enabled: true

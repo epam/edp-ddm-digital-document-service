@@ -35,4 +35,7 @@ public class InternalApiDocumentMetadataDto {
   private String type;
   private String checksum;
   private long size;
+  private Integer imageMaxWidth;
+  private Integer imageMaxHeight;
+  private Integer compressionQuality;
 }

@@ -30,7 +30,7 @@
     <ddm-starter-validation.version>1.6.0.14</ddm-starter-validation.version>
     <bpms-client.version>1.9.7.9</bpms-client.version>
     <ddm-starter-kafka.version>1.6.0.8</ddm-starter-kafka.version>
-    <ddm-file-storage.version>1.7.0.9</ddm-file-storage.version>
+    <ddm-file-storage.version>1.9.8-1.9.8-hotfix.4</ddm-file-storage.version>
 
     <apache.commons.io.version>2.11.0</apache.commons.io.version>
     <apache.tika.version>2.7.0</apache.tika.version>

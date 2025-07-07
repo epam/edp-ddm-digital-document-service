@@ -25,17 +25,19 @@ import com.epam.digital.data.platform.dgtldcmnt.dto.GetDocumentDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.GetDocumentsMetadataDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.InternalApiDocumentMetadataDto;
 import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentFromUserFormDto;
+import com.epam.digital.data.platform.dgtldcmnt.mapper.DocumentMetadataDtoMapper;
 import com.epam.digital.data.platform.dgtldcmnt.service.AuthorizationService;
 import com.epam.digital.data.platform.dgtldcmnt.service.DocumentService;
 import com.epam.digital.data.platform.dgtldcmnt.service.ValidationService;
 import com.epam.digital.data.platform.dgtldcmnt.validator.AllowedUploadedDocument;
-import java.util.List;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * The document facade for management of the documents. It contains authorization and validation.
@@ -50,6 +52,7 @@ public class DocumentFacade {
   private final AuthorizationService authorizationService;
   private final ValidationService validationService;
   private final TaskRestClient taskRestClient;
+  private final DocumentMetadataDtoMapper mapper;
 
   /**
    * Put document to storage. Before uploading the method does authorization and validation.
@@ -73,6 +76,7 @@ public class DocumentFacade {
 
     authorizationService.authorize(rootProcessInstanceId, List.of(fieldName), task,
         authentication);
+
     validationService.validate(uploadDocumentDto);
 
     var result = documentService.put(uploadDocumentDto);
@@ -111,7 +115,7 @@ public class DocumentFacade {
    * @return list of documents metadata.
    */
   public List<DocumentMetadataDto> getMetadata(GetDocumentsMetadataDto getMetadataDto,
-      Authentication authentication) {
+                                               Authentication authentication) {
     var fieldNames = getMetadataDto.getDocuments().stream()
         .map(DocumentIdDto::getFieldName).collect(Collectors.toList());
     var taskId = getMetadataDto.getTaskId();
@@ -135,7 +139,7 @@ public class DocumentFacade {
    * @return list of documents metadata.
    */
   public InternalApiDocumentMetadataDto getMetadata(String rootProcessInstanceId,
-      String documentId) {
+                                                    String documentId) {
     log.info("Getting file {} metadata in process {}", documentId, rootProcessInstanceId);
 
     var result = documentService.getMetadata(rootProcessInstanceId, documentId);
@@ -188,6 +192,9 @@ public class DocumentFacade {
         .type(documentMetadata.getType())
         .name(documentMetadata.getName())
         .checksum(documentMetadata.getChecksum())
+        .imageMaxWidth(documentMetadata.getImageMaxWidth())
+        .imageMaxHeight(documentMetadata.getImageMaxHeight())
+        .compressionQuality(documentMetadata.getCompressionQuality())
         .build();
   }
 
@@ -204,7 +211,7 @@ public class DocumentFacade {
   }
 
   private void authorize(String rootProcessInstanceId, String taskId, List<String> filedNames,
-      Authentication authentication) {
+                         Authentication authentication) {
     var task = taskRestClient.getTaskById(taskId);
 
     validationService.checkFieldNamesExistence(filedNames, task.getFormKey());

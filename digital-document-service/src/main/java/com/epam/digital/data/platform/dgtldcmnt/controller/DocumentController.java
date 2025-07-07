@@ -33,12 +33,14 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import javax.servlet.annotation.MultipartConfig;
 import javax.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
@@ -143,6 +145,9 @@ public class DocumentController {
       @PathVariable("fieldName") String fieldName,
       @RequestParam("file") MultipartFile file,
       @RequestParam(required = false, name = "filename") String filename,
+      @RequestParam(required = false, name = "imageMaxWidth") Integer imageMaxWidth,
+      @RequestParam(required = false, name = "imageMaxHeight") Integer imageMaxHeight,
+      @RequestParam(required = false, name = "compressionQuality") Integer compressionQuality,
       Authentication authentication) throws IOException {
     var uploadDocumentDto = UploadDocumentFromUserFormDto.builder()
         .filename(Objects.isNull(filename) ? file.getOriginalFilename() : filename)
@@ -153,6 +158,9 @@ public class DocumentController {
         .fieldName(fieldName)
         .size(file.getSize())
         .taskId(taskId)
+        .imageMaxWidth(imageMaxWidth)
+        .imageMaxHeight(imageMaxHeight)
+        .compressionQuality(compressionQuality)
         .build();
     return documentFacade.validateAndPut(uploadDocumentDto, authentication);
   }
@@ -331,7 +339,7 @@ public class DocumentController {
           @ApiResponse(
               description = "Documents deleted successfully.",
               responseCode = "200"
-              ),
+          ),
           @ApiResponse(
               responseCode = "401",
               description = "Unauthorized",
@@ -389,10 +397,10 @@ public class DocumentController {
       }
   )
   public void deleteByFileId(@PathVariable("rootProcessInstanceId") String rootProcessInstanceId,
-      @PathVariable("taskId") String taskId,
-      @PathVariable("fieldName") String fieldName,
-      @PathVariable("fileId") String fileId,
-      Authentication authentication) {
+                             @PathVariable("taskId") String taskId,
+                             @PathVariable("fieldName") String fieldName,
+                             @PathVariable("fileId") String fileId,
+                             Authentication authentication) {
     var deleteDocumentDto = DeleteDocumentDto.builder()
         .rootProcessInstanceId(rootProcessInstanceId)
         .fieldName(fieldName)

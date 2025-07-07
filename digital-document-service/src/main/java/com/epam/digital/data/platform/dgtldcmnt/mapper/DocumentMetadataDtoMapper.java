@@ -17,7 +17,9 @@
 package com.epam.digital.data.platform.dgtldcmnt.mapper;
 
 import com.epam.digital.data.platform.dgtldcmnt.dto.DocumentMetadataDto;
+import com.epam.digital.data.platform.dgtldcmnt.dto.ImageCompressorParameters;
 import com.epam.digital.data.platform.dgtldcmnt.dto.InternalApiDocumentMetadataDto;
+import com.epam.digital.data.platform.dgtldcmnt.dto.UploadDocumentDto;
 import com.epam.digital.data.platform.storage.file.dto.FileMetadataDto;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -46,8 +48,16 @@ public interface DocumentMetadataDtoMapper {
   @Mapping(source = "fileMetadataDto.filename", target = "name", qualifiedByName = "mapFilename")
   @Mapping(source = "fileMetadataDto.contentType", target = "type")
   @Mapping(source = "fileMetadataDto.contentLength", target = "size")
+  @Mapping(source = "fileMetadataDto.imageMaxWidth", target = "imageMaxWidth")
+  @Mapping(source = "fileMetadataDto.imageMaxHeight", target = "imageMaxHeight")
+  @Mapping(source = "fileMetadataDto.compressionQuality", target = "compressionQuality")
   @Mapping(source = "url", target = "url")
   DocumentMetadataDto toDocumentMetadataDto(FileMetadataDto fileMetadataDto, String url);
+
+  @Mapping(source = "imageMaxWidth", target = "imageMaxWidth")
+  @Mapping(source = "imageMaxHeight", target = "imageMaxHeight")
+  @Mapping(source = "compressionQuality", target = "compressionQuality")
+  ImageCompressorParameters toFileCompressorParameters(UploadDocumentDto uploadDocumentDto);
 
   @Named("mapFilename")
   default String mapFilename(String fileName) {
